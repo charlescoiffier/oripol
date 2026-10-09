@@ -10,7 +10,8 @@
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test": "vitest run"
+    "test": "vitest run",
+    "start": "vite dev --port 5173 --open"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^8.0.0",
