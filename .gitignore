@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.pytest_cache/
+etl/data/
+node_modules/
+web/.svelte-kit/
+web/build/
+web/static/data/
+.DS_Store
+.superpowers/
