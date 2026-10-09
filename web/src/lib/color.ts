@@ -2,8 +2,8 @@ import { interpolateRgb } from 'd3-interpolate';
 
 export const NO_DATA_COLOR = '#b9b9b9';
 
-/** Les scores réels dépassent rarement ±1 : la couleur sature à ±SCORE_DOMAIN pour rester lisible. */
-export const SCORE_DOMAIN = 1;
+/** Les scores réels dépassent rarement ±0,6 : la couleur sature à ±SCORE_DOMAIN pour rester lisible. */
+export const SCORE_DOMAIN = 0.6;
 
 const LEFT = '#b3261e';
 const MIDDLE = '#fbf6e9';
