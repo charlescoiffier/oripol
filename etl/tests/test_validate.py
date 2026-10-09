@@ -25,3 +25,36 @@ def test_sum_mismatch_raises():
 def test_unmapped_list_raises():
     with pytest.raises(ValueError, match="sans famille"):
         validate(*tables(key="GHOST"), M)
+
+
+def coverage_tables(unresolved_exprimes):
+    part = pl.DataFrame(
+        {
+            "election_id": ["e"] * 4,
+            "code": ["A", "ZZ001", "98801", "B1"],
+            "exprimes": [1_000_000, 500_000, 20_000, unresolved_exprimes],
+        }
+    )
+    return part, {"A"}
+
+
+def test_coverage_ignores_known_non_geo_codes():
+    from oripol_etl.validate import validate_coverage
+
+    part, current = coverage_tables(0)
+    validate_coverage(part.filter(pl.col("code") != "B1"), current)
+
+
+def test_coverage_tolerates_a_tiny_unresolved_share():
+    from oripol_etl.validate import validate_coverage
+
+    part, current = coverage_tables(300)  # 0,03 % des exprimés
+    validate_coverage(part, current)
+
+
+def test_coverage_raises_when_a_real_commune_is_unresolved():
+    from oripol_etl.validate import validate_coverage
+
+    part, current = coverage_tables(50_000)
+    with pytest.raises(ValueError, match="codes commune non résolus"):
+        validate_coverage(part, current)

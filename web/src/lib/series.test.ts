@@ -37,6 +37,15 @@ describe('buildSeries', () => {
 		expect(s[1].score).toBeCloseTo(-0.2);
 	});
 
+	it('exposes blancs+nuls rate and precision for the panel', () => {
+		const e = mk('pres-2002-1', 2002, {
+			'DEP-69': { ...withIds('pres-2002-1', res(30, 70)), blancs: 10, nuls: 10 }
+		});
+		const [p] = buildSeries([e], 'pres', 'DEP-69', families, NO_OVERRIDES);
+		expect(p.blancsNuls).toBeCloseTo(0.1); // 20 / 200 inscrits
+		expect(p.precision).toBe('commune');
+	});
+
 	it('computes abstention from inscrits and votants', () => {
 		const s = buildSeries(elections, 'pres', 'DEP-69', families, NO_OVERRIDES);
 		expect(s[0].abstention).toBeCloseTo(0.5);

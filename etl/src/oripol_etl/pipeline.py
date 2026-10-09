@@ -9,7 +9,7 @@ from .export import write_site_data
 from .families import load_families, load_list_mappings
 from .ministry import to_commune_tables
 from .targets import chefs_lieux, population_max, select_targets
-from .validate import validate
+from .validate import validate, validate_coverage
 
 
 def _csv(path):
@@ -35,6 +35,7 @@ def run() -> None:
     families = load_families(c.MAPPING)
     mappings = load_list_mappings(c.MAPPING)
     participation, votes = to_commune_tables(_table(c.GENERAL_FILE), _table(c.CANDIDATES_FILE), c.COLUMNS, resolver)
+    validate_coverage(participation, current)  # lève si de vraies communes ne se résolvent pas
     participation = participation.join(geo.select("code"), on="code", how="inner")
     votes = votes.join(geo.select("code"), on="code", how="inner")
 

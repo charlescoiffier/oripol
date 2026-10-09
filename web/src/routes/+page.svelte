@@ -3,7 +3,7 @@
 	import { replaceState } from '$app/navigation';
 	import { BASE } from '../lib/paths';
 	import { app } from '../lib/app-state.svelte';
-	import { scoreColor } from '../lib/color';
+	import { NO_DATA_COLOR, SCORE_DOMAIN, scoreColor } from '../lib/color';
 	import { loadDataset, type Dataset } from '../lib/data';
 	import { score } from '../lib/score';
 	import { buildSeries } from '../lib/series';
@@ -54,6 +54,14 @@
 		return out;
 	});
 
+	const choices = $derived.by(() => {
+		if (!dataset) return [];
+		const prefix = PREFIX[app.level];
+		return Object.entries(dataset.names)
+			.filter(([id]) => id.startsWith(prefix))
+			.sort((a, b) => a[1].localeCompare(b[1], 'fr'));
+	});
+
 	const points = $derived(
 		dataset && election && app.territory
 			? buildSeries(dataset.elections, election.type, app.territory, dataset.families, app.classification)
@@ -86,11 +94,26 @@
 					<label><input type="radio" bind:group={app.level} value={v} /> {label}</label>
 				{/each}
 			</fieldset>
+			<label>
+				Territoire
+				<select bind:value={app.territory}>
+					<option value={null}>— choisir —</option>
+					<option value="FR">France</option>
+					{#each choices as [id, name] (id)}
+						<option value={id}>{name}</option>
+					{/each}
+				</select>
+			</label>
+			<div class="legend" aria-label="Légende du score">
+				<div class="bar" style="background: linear-gradient(to right, {scoreColor(-SCORE_DOMAIN)}, {scoreColor(0)}, {scoreColor(SCORE_DOMAIN)})"></div>
+				<div class="ticks"><span>−{SCORE_DOMAIN} gauche</span><span>0</span><span>+{SCORE_DOMAIN} droite</span></div>
+				<div class="nodata"><span class="swatch" style="background:{NO_DATA_COLOR}"></span> Pas de donnée / hors périmètre</div>
+			</div>
 			{#if election}
 				<RankingEditor families={dataset.families} lists={election.lists} />
 			{/if}
 			<p class="note">
-				Score : −2 = extrême gauche, +2 = extrême droite. « France » = France métropolitaine et DOM
+				Score sur l'axe −2 (extrême gauche) à +2 (extrême droite) ; la couleur sature à ±1. « France » = France métropolitaine et DOM
 				(hors Français établis hors de France et collectivités d'outre-mer).
 				<a href="{BASE}/methodologie">Méthodologie</a> · <a href="{BASE}/sources">Sources</a>
 			</p>
@@ -132,6 +155,25 @@
 	}
 	fieldset label {
 		display: block;
+	}
+	.legend {
+		margin: 0.75rem 0;
+		font-size: 0.75rem;
+	}
+	.legend .bar {
+		height: 10px;
+		border: 1px solid #ccc;
+	}
+	.legend .ticks {
+		display: flex;
+		justify-content: space-between;
+	}
+	.legend .swatch {
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		border: 1px solid #aaa;
+		vertical-align: middle;
 	}
 	.note {
 		font-size: 0.75rem;

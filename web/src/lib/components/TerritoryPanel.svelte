@@ -11,6 +11,8 @@
 
 	let { name, points, families }: { name: string; points: SeriesPoint[]; families: Family[] } = $props();
 
+	const pct = (v: number | null) => (v === null ? '—' : `${(v * 100).toFixed(1)} %`);
+
 	let scoreEl: HTMLDivElement;
 	let sharesEl: HTMLDivElement;
 	let scoreChart: echarts.ECharts | undefined;
@@ -92,6 +94,26 @@
 	<div bind:this={scoreEl} class="chart"></div>
 	<h3>Parts des suffrages exprimés</h3>
 	<div bind:this={sharesEl} class="chart tall"></div>
+	{#if points.length}
+		<table>
+			<caption>Données du territoire</caption>
+			<thead>
+				<tr><th>Année</th><th>Précision</th><th>Score</th><th>Abstention</th><th>Blancs + nuls</th></tr>
+			</thead>
+			<tbody>
+				{#each points as p (p.electionId)}
+					<tr>
+						<td>{p.year}</td>
+						<td>{p.precision}</td>
+						<td>{p.score === null ? '—' : p.score.toFixed(2)}</td>
+						<td>{pct(p.abstention)}</td>
+						<td>{pct(p.blancsNuls)}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+		<p class="foot">Abstention et blancs + nuls sont rapportés aux inscrits ; avant 2014 les blancs sont comptés avec les nuls.</p>
+	{/if}
 </section>
 
 <style>
@@ -105,6 +127,31 @@
 	.empty {
 		color: #666;
 		font-style: italic;
+	}
+	table {
+		width: 100%;
+		margin-top: 1rem;
+		border-collapse: collapse;
+		font-size: 0.8rem;
+	}
+	caption {
+		text-align: left;
+		font-weight: 600;
+		margin-bottom: 0.25rem;
+	}
+	th,
+	td {
+		text-align: right;
+		padding: 0.15rem 0.3rem;
+		border-bottom: 1px solid #eee;
+	}
+	th:first-child,
+	td:first-child {
+		text-align: left;
+	}
+	.foot {
+		font-size: 0.7rem;
+		color: #666;
 	}
 	h2 {
 		margin: 0 0 0.5rem;

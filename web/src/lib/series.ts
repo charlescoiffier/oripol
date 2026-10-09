@@ -1,5 +1,5 @@
 import { familyShares, score } from './score';
-import type { Classification, ElectionData, Family, FamilyId } from './types';
+import type { Classification, ElectionData, Family, FamilyId, Precision } from './types';
 
 export interface SeriesPoint {
 	electionId: string;
@@ -8,6 +8,9 @@ export interface SeriesPoint {
 	score: number | null;
 	shares: Partial<Record<FamilyId, number>>;
 	abstention: number | null;
+	/** Blancs + nuls rapportés aux inscrits (avant 2014 les blancs sont comptés dans les nuls). */
+	blancsNuls: number | null;
+	precision: Precision;
 }
 
 export function buildSeries(
@@ -28,7 +31,9 @@ export function buildSeries(
 				year: e.year,
 				score: score(r, e.lists, families, c),
 				shares: familyShares(r, e.lists, c),
-				abstention: r.inscrits > 0 ? 1 - r.votants / r.inscrits : null
+				abstention: r.inscrits > 0 ? 1 - r.votants / r.inscrits : null,
+				blancsNuls: r.inscrits > 0 ? (r.blancs + r.nuls) / r.inscrits : null,
+				precision: r.precision
 			};
 		});
 }
