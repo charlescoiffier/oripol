@@ -49,10 +49,18 @@ def write_site_data(
     existing = json.loads(names_path.read_text(encoding="utf-8")) if names_path.exists() else {}
     names_path.write_text(json.dumps({**existing, **names}, ensure_ascii=False), encoding="utf-8")
     for e in ids:
+        keys = sorted({k for r in payloads[e].values() for k in r["voix"]})
         territories = {
-            tid: {**r, "voix": {f"{e}.{k}": v for k, v in r["voix"].items()}}
+            tid: [r[c] for c in ("inscrits", "votants", "blancs", "nuls", "exprimes")]
+            + [r["voix"].get(k, 0) for k in keys]
             for tid, r in payloads[e].items()
         }
+        # tout est à la précision « commune » : le champ est implicite côté site
         (out / "elections" / f"{e}.json").write_text(
-            json.dumps({"id": e, "territories": territories}, ensure_ascii=False), encoding="utf-8"
+            json.dumps(
+                {"id": e, "lists": [f"{e}.{k}" for k in keys], "territories": territories},
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            encoding="utf-8",
         )

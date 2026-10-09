@@ -9,7 +9,7 @@ def test_writes_prefixed_list_ids_and_index(tmp_path):
     mappings = {"pres-2022-1": {"X": ListMapping("X", "Candidat X", "gauche")}}
     payloads = {
         "pres-2022-1": {
-            "FR": {"inscrits": 10, "votants": 8, "blancs": 0, "nuls": 0, "exprimes": 8, "voix": {"X": 8}, "precision": "commune"}
+            "FR": {"inscrits": 10, "votants": 8, "blancs": 1, "nuls": 1, "exprimes": 8, "voix": {"X": 8}, "precision": "commune"}
         }
     }
     write_site_data(tmp_path, families, mappings, payloads, names={"FR": "France"})
@@ -18,6 +18,7 @@ def test_writes_prefixed_list_ids_and_index(tmp_path):
     cls = json.loads((tmp_path / "classification.json").read_text())
     assert cls["lists"]["pres-2022-1.X"] == {"label": "Candidat X", "family": "gauche"}
     el = json.loads((tmp_path / "elections" / "pres-2022-1.json").read_text())
-    assert el["territories"]["FR"]["voix"] == {"pres-2022-1.X": 8}
+    assert el["lists"] == ["pres-2022-1.X"]
+    assert el["territories"]["FR"] == [10, 8, 1, 1, 8, 8]  # inscrits, votants, blancs, nuls, exprimés, voix par liste
     names = json.loads((tmp_path / "names.json").read_text())
     assert names["FR"] == "France"

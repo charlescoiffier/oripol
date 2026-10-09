@@ -11,16 +11,9 @@ MAPPING = ROOT / "mappings" / "presidentielle.yaml"
 
 # --- COG Insee millésime 2026 (colonnes lues en minuscules) ---
 COG_COMMUNES = RAW / "v_commune.csv"  # typecom, com, dep, reg
-COG_DEPARTEMENTS = RAW / "v_departement.csv"  # dep, cheflieu
-COG_ARRONDISSEMENTS = RAW / "v_arrondissement.csv"  # arr, cheflieu
 COG_MOUVEMENTS = RAW / "v_mvt_commune.csv"  # mod, date_eff, typecom_av, com_av, typecom_ap, com_ap
-
-# --- Populations historiques Insee (géographie 2025) ---
-POP_FILE = RAW / "base-pop-historiques-1876-2023.xlsx"
-POP_SHEET = "pop_1876_2023"
-POP_HEADER_ROW = 5
-POP_ID_COL = "CODGEO"
-POP_EXCLUDE = ["REG", "DEP"]
+COG_COMER_COMMUNES = RAW / "v_commune_comer.csv"  # com_comer, libelle, comer, libelle_comer
+COG_COMER = RAW / "v_comer.csv"  # comer, libelle
 
 # --- Élections agrégées (data.gouv.fr) ---
 GENERAL_FILE = RAW / "general_results.parquet"

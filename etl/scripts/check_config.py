@@ -16,11 +16,9 @@ def need(df, cols, label):
 
 
 need(read(c.COG_COMMUNES), ["typecom", "com", "dep", "reg"], "COG communes")
-need(read(c.COG_DEPARTEMENTS), ["dep", "cheflieu"], "COG départements")
-need(read(c.COG_ARRONDISSEMENTS), ["arr", "cheflieu"], "COG arrondissements")
+need(read(c.COG_COMER_COMMUNES), ["com_comer", "comer"], "COG communes d'outre-mer")
+need(read(c.COG_COMER), ["comer", "libelle"], "COG collectivités d'outre-mer")
 need(read(c.COG_MOUVEMENTS), ["mod", "date_eff", "typecom_av", "com_av", "typecom_ap", "com_ap"], "COG mouvements")
-pop = pl.read_excel(c.POP_FILE, sheet_name=c.POP_SHEET, read_options={"header_row": c.POP_HEADER_ROW})
-need(pop, [c.POP_ID_COL, *c.POP_EXCLUDE], "Population")
 g, k = read(c.GENERAL_FILE), read(c.CANDIDATES_FILE)
 cm = c.COLUMNS
 need(g, [cm.election_id, cm.bureau_id, cm.inscrits, cm.votants, cm.blancs, cm.nuls, cm.exprimes], "Général")

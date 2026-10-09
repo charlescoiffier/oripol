@@ -3,7 +3,8 @@ from __future__ import annotations
 import polars as pl
 
 SUM_COLS = ["inscrits", "votants", "blancs", "nuls", "exprimes"]
-LEVELS = [("COM", "code", True), ("DEP", "dep", False), ("REG", "reg", False), ("FR", None, False)]
+# (préfixe, colonne de regroupement, filtre éventuel)
+LEVELS = [("COM", "code"), ("DEP", "dep"), ("REG", "reg"), ("FR", None)]
 
 
 def build_payload(
@@ -11,16 +12,16 @@ def build_payload(
     participation: pl.DataFrame,
     votes: pl.DataFrame,
     geo: pl.DataFrame,
-    targets: list[str],
 ) -> dict[str, dict]:
     part = participation.filter(pl.col("election_id") == election_id).join(geo, on="code", how="inner")
     vote = votes.filter(pl.col("election_id") == election_id).join(geo, on="code", how="inner")
     out: dict[str, dict] = {}
-    for prefix, col, only_targets in LEVELS:
+    for prefix, col in LEVELS:
         p, v = part, vote
-        if only_targets:
-            p = p.filter(pl.col("code").is_in(targets))
-            v = v.filter(pl.col("code").is_in(targets))
+        if prefix == "COM":  # les bureaux consulaires (dép. ZZ) n'ont pas de commune
+            p, v = p.filter(pl.col("dep") != "ZZ"), v.filter(pl.col("dep") != "ZZ")
+        elif prefix == "REG":
+            p, v = p.filter(pl.col("reg").is_not_null()), v.filter(pl.col("reg").is_not_null())
         key = pl.col(col) if col else pl.lit("")
 
         def tid(k: str) -> str:

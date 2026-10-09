@@ -7,3 +7,4 @@ web/.svelte-kit/
 web/build/
 .DS_Store
 .superpowers/
+web/static/data/

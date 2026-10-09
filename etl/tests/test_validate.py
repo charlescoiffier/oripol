@@ -30,15 +30,15 @@ def test_unmapped_list_raises():
 def coverage_tables(unresolved_exprimes):
     part = pl.DataFrame(
         {
-            "election_id": ["e"] * 4,
-            "code": ["A", "ZZ001", "98801", "B1"],
-            "exprimes": [1_000_000, 500_000, 20_000, unresolved_exprimes],
+            "election_id": ["e"] * 2,
+            "code": ["A", "B1"],
+            "exprimes": [1_000_000, unresolved_exprimes],
         }
     )
     return part, {"A"}
 
 
-def test_coverage_ignores_known_non_geo_codes():
+def test_coverage_passes_when_everything_resolves():
     from oripol_etl.validate import validate_coverage
 
     part, current = coverage_tables(0)
