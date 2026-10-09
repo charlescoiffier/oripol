@@ -33,7 +33,7 @@ class CommuneResolver:
 def build_resolver(mouvements: pl.DataFrame, current_codes: set[str]) -> CommuneResolver:
     df = mouvements.rename({c: c.lower() for c in mouvements.columns})
     df = df.filter(
-        pl.col("mod").is_in(list(MERGE_MODS))
+        pl.col("mod").cast(pl.Int64).is_in(list(MERGE_MODS))
         & (pl.col("typecom_av") == "COM")
         & (pl.col("typecom_ap") == "COM")
         & (pl.col("com_av") != pl.col("com_ap"))

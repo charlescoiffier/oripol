@@ -70,3 +70,11 @@ def test_cycle_does_not_loop_forever():
     )
     r = build_resolver(m, set())
     assert r.resolve("11111") in {"11111", "22222"}
+
+
+def test_mod_given_as_text_is_supported():
+    m = mouvements([(31, "2016-01-01", "COM", "2A001", "COM", "2A002")]).with_columns(
+        pl.col("MOD").cast(pl.String)
+    )
+    r = build_resolver(m, {"2A002"})
+    assert r.resolve("2A001") == "2A002"
