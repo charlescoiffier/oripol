@@ -1,0 +1,73 @@
+import { describe, expect, it } from 'vitest';
+import { NO_OVERRIDES, familyShares, score } from './score';
+import type { Family, ListInfo, TerritoryResult } from './types';
+
+const families: Family[] = [
+	{ id: 'extreme_gauche', label: 'EG', position: -2, color: '#000' },
+	{ id: 'gauche', label: 'G', position: -1, color: '#000' },
+	{ id: 'centre', label: 'C', position: 0, color: '#000' },
+	{ id: 'droite', label: 'D', position: 1, color: '#000' },
+	{ id: 'extreme_droite', label: 'ED', position: 2, color: '#000' },
+	{ id: 'divers', label: 'Div', position: null, color: '#000' },
+	{ id: 'regionaliste', label: 'Reg', position: null, color: '#000' }
+];
+const lists: Record<string, ListInfo> = {
+	a: { label: 'A', family: 'gauche' },
+	b: { label: 'B', family: 'droite' },
+	c: { label: 'C', family: 'divers' }
+};
+const result = (voix: Record<string, number>, exprimes: number): TerritoryResult => ({
+	inscrits: 200,
+	votants: 120,
+	blancs: 10,
+	nuls: 10,
+	exprimes,
+	voix,
+	precision: 'commune'
+});
+
+describe('score', () => {
+	it('is 0 when left and right are balanced', () => {
+		expect(score(result({ a: 50, b: 50 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(0);
+	});
+
+	it('dilutes the score with off-axis families but counts them in exprimes', () => {
+		expect(score(result({ a: 50, c: 50 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(-0.5);
+	});
+
+	it('applies a list override', () => {
+		const c = { positions: {}, listFamilies: { a: 'droite' as const } };
+		expect(score(result({ a: 50, b: 50 }, 100), lists, families, c)).toBeCloseTo(1);
+	});
+
+	it('applies a position override, including null (off-axis)', () => {
+		expect(
+			score(result({ a: 50, b: 50 }, 100), lists, families, {
+				positions: { gauche: -2 },
+				listFamilies: {}
+			})
+		).toBeCloseTo(-0.5);
+		expect(
+			score(result({ a: 50, b: 50 }, 100), lists, families, {
+				positions: { gauche: null },
+				listFamilies: {}
+			})
+		).toBeCloseTo(0.5);
+	});
+
+	it('returns null (not 0, not NaN) when exprimes is 0', () => {
+		expect(score(result({}, 0), lists, families, NO_OVERRIDES)).toBeNull();
+	});
+
+	it('ignores unknown list ids and treats a missing list as share 0', () => {
+		expect(score(result({ zzz: 10, a: 10 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(-0.1);
+	});
+});
+
+describe('familyShares', () => {
+	it('sums shares per family', () => {
+		const s = familyShares(result({ a: 30, b: 20 }, 100), lists, NO_OVERRIDES);
+		expect(s.gauche).toBeCloseTo(0.3);
+		expect(s.droite).toBeCloseTo(0.2);
+	});
+});
