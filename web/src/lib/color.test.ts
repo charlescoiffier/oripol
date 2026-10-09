@@ -20,6 +20,11 @@ describe('scoreColor', () => {
 	it('is distinct at both extremes', () => {
 		expect(scoreColor(-SCORE_DOMAIN)).not.toBe(scoreColor(SCORE_DOMAIN));
 	});
+	it('colours a weakly oriented territory visibly (a national score of 0.1 must not look white)', () => {
+		const mapBackground = '#eef1f4';
+		expect(distance(scoreColor(0.1), mapBackground)).toBeGreaterThan(120);
+		expect(distance(scoreColor(-0.1), mapBackground)).toBeGreaterThan(120);
+	});
 	it('never confuses a centrist score with missing data', () => {
 		for (const s of [0, 0.05, -0.05]) {
 			expect(distance(scoreColor(s), NO_DATA_COLOR)).toBeGreaterThan(120);

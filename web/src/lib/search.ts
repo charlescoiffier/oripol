@@ -1,3 +1,5 @@
+import type { Level } from './types';
+
 export interface Hit {
 	id: string;
 	label: string;
@@ -59,4 +61,12 @@ export function searchTerritories(names: Record<string, string>, query: string, 
 			a.hit.label.localeCompare(b.hit.label, 'fr')
 	);
 	return scored.slice(0, limit).map((s) => s.hit);
+}
+
+/** Niveau de carte sur lequel un territoire est affiché. */
+export function levelForId(id: string): Level {
+	if (id === 'FR') return 'pays';
+	if (id.startsWith('REG-')) return 'regions';
+	if (id.startsWith('COM-')) return 'communes';
+	return 'departements';
 }

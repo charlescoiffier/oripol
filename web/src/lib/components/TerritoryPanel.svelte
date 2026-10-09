@@ -54,38 +54,35 @@
 	$effect(() => {
 		if (!mounted) return;
 		const years = points.map((p) => String(p.year));
-		const scores = points.flatMap((p) => (p.score === null ? [] : [p.score]));
-		const lo = Math.min(0, ...scores);
-		const hi = Math.max(0, ...scores);
-		const pad = Math.max(0.25, (hi - lo) * 0.2);
+		// axe symétrique autour de la ligne médiane : gauche à gauche, droite à droite
+		const half = Math.max(0.3, ...points.map((p) => Math.abs(p.score ?? 0))) * 1.25;
 		orientationChart?.setOption(
 			{
-				grid: { left: 8, right: 8, top: 10, bottom: 22 },
+				grid: { left: 40, right: 14, top: 8, bottom: 8 },
 				tooltip: {
 					...TOOLTIP,
 					trigger: 'axis',
 					formatter: (params: { dataIndex: number }[]) => {
 						const p = points[params[0].dataIndex];
-						return p.score === null
-							? `${p.year} : pas de donnée`
-							: `<b>${p.year}</b><br/>${wording(p.score)}`;
+						return p.score === null ? `${p.year} : pas de donnée` : `<b>${p.year}</b><br/>${wording(p.score)}`;
 					}
 				},
-				xAxis: { type: 'category', data: years, axisTick: { show: false } },
-				yAxis: {
+				xAxis: {
 					type: 'value',
-					min: lo - pad,
-					max: hi + pad,
+					min: -half,
+					max: half,
 					axisLabel: { show: false },
 					axisLine: { show: false },
 					axisTick: { show: false },
 					splitLine: { show: false }
 				},
+				// catégories de bas en haut : 2002 en bas, 2022 en haut
+				yAxis: { type: 'category', data: years, axisTick: { show: false }, axisLine: { show: false } },
 				series: [
 					{
 						name: 'Orientation',
 						type: 'line',
-						symbolSize: 7,
+						symbolSize: 8,
 						itemStyle: { color: '#db4c3f' },
 						lineStyle: { color: '#db4c3f', width: 2 },
 						data: points.map((p) => (p.score === null ? null : Number(p.score.toFixed(3)))),
@@ -93,8 +90,8 @@
 							silent: true,
 							symbol: 'none',
 							label: { show: false },
-							lineStyle: { color: '#ddd', type: 'dashed' },
-							data: [{ yAxis: 0 }]
+							lineStyle: { color: '#bbb', type: 'dashed' },
+							data: [{ xAxis: 0 }]
 						}
 					}
 				]
@@ -139,11 +136,11 @@
 		<p class="empty">Pas de données pour ce territoire.</p>
 	{/if}
 
-	<h3>Évolution de l'orientation du vote</h3>
-	<p class="axis-hint">Plus haut : plus à droite · plus bas : plus à gauche</p>
-	<div bind:this={orientationEl} class="chart short"></div>
+	<h3 class="section-title">Évolution de l'orientation du vote</h3>
+	<div bind:this={orientationEl} class="chart orientation"></div>
+	<div class="sides"><span>← Gauche</span><span>Droite →</span></div>
 
-	<h3>Répartition des votes</h3>
+	<h3 class="section-title">Répartition des votes</h3>
 	<div bind:this={sharesEl} class="chart"></div>
 	<ul class="legend">
 		{#each usedFamilies as f (f.id)}
@@ -159,31 +156,23 @@
 		align-items: baseline;
 		gap: 8px;
 	}
-	h2 {
-		font-size: 17px;
-	}
 	.kind {
 		color: var(--muted);
 		font-size: 12px;
-	}
-	h3 {
-		margin: 16px 0 4px;
-		font-size: 11px;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--muted);
-	}
-	.axis-hint {
-		margin: 0;
-		font-size: 11px;
-		color: var(--muted);
 	}
 	.chart {
 		width: 100%;
 		height: 230px;
 	}
-	.chart.short {
-		height: 150px;
+	.chart.orientation {
+		height: 190px;
+	}
+	.sides {
+		display: flex;
+		justify-content: space-between;
+		padding: 0 14px 0 40px;
+		font-size: 11px;
+		color: var(--muted);
 	}
 	.empty {
 		color: var(--muted);

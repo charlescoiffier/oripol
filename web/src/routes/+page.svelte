@@ -7,6 +7,7 @@
 	import { loadDataset, type Dataset } from '../lib/data';
 	import { score } from '../lib/score';
 	import { buildSeries } from '../lib/series';
+	import { levelForId } from '../lib/search';
 	import { decodeState, encodeState } from '../lib/url-state';
 	import AboutModal from '../lib/components/AboutModal.svelte';
 	import Map from '../lib/components/Map.svelte';
@@ -14,12 +15,15 @@
 	import TerritoryPanel from '../lib/components/TerritoryPanel.svelte';
 	import TerritorySearch from '../lib/components/TerritorySearch.svelte';
 	import type { Level } from '../lib/types';
+	import type { Focus } from '../lib/components/MapView.svelte';
 
 	let dataset = $state<Dataset | null>(null);
 	let error = $state<string | null>(null);
 	let leftOpen = $state(true);
 	let rightOpen = $state(true);
 	let aboutOpen = $state(false);
+	let focus = $state<Focus | undefined>(undefined);
+	let boundsIndex: Record<string, [number, number, number, number]> | null = null;
 
 	const PREFIX: Record<Level, string> = { pays: 'DEP-', regions: 'REG-', departements: 'DEP-', communes: 'COM-' };
 	const LEVELS: [Level, string][] = [
@@ -102,6 +106,20 @@
 		app.territory = app.level === 'pays' ? 'FR' : id;
 		rightOpen = true;
 	}
+
+	/** Territoire choisi dans la recherche : on le valide, on change de niveau et on zoome dessus. */
+	async function goToTerritory(id: string) {
+		app.level = levelForId(id);
+		app.territory = id;
+		rightOpen = true;
+		try {
+			boundsIndex ??= await (await fetch(`${BASE}/data/bounds.json`)).json();
+		} catch {
+			return; // sans emprises, on garde la vue actuelle
+		}
+		const bounds = boundsIndex?.[id];
+		if (bounds) focus = { bounds };
+	}
 </script>
 
 <svelte:head><title>Oripol – évolution politique des territoires</title></svelte:head>
@@ -121,7 +139,7 @@
 				</header>
 
 				<div class="field">
-					<label for="election">Élection</label>
+					<label for="election" class="section-title first">Élection</label>
 					<select id="election" bind:value={app.election}>
 						{#each dataset.elections as e (e.id)}
 							<option value={e.id}>{e.label}</option>
@@ -130,7 +148,7 @@
 				</div>
 
 				<div class="field">
-					<span class="label" id="level-label">Niveau</span>
+					<span class="section-title" id="level-label">Niveau</span>
 					<div class="seg" role="radiogroup" aria-labelledby="level-label">
 						{#each LEVELS as [v, label] (v)}
 							<button
@@ -163,7 +181,7 @@
 		</aside>
 
 		<main>
-			<Map level={app.level} {colors} onselect={select} />
+			<Map level={app.level} {colors} onselect={select} {focus} />
 			{#if !leftOpen}
 				<button class="handle left-handle" type="button" aria-label="Déplier le panneau de gauche" onclick={() => (leftOpen = true)}>›</button>
 			{/if}
@@ -175,7 +193,7 @@
 		<aside class="right" aria-label="Territoire" inert={!rightOpen}>
 			<div class="inner">
 				<div class="top">
-					<TerritorySearch names={dataset.names} onselect={select} />
+					<TerritorySearch names={dataset.names} onselect={goToTerritory} />
 					<button class="icon-btn" type="button" aria-label="Replier le panneau" onclick={() => (rightOpen = false)}>›</button>
 				</div>
 				{#if territoryName}
@@ -232,7 +250,6 @@
 	}
 	h1 {
 		flex: 1;
-		font-size: 17px;
 		color: var(--accent);
 		letter-spacing: -0.01em;
 	}
@@ -242,16 +259,7 @@
 		font-size: 12px;
 	}
 	.field {
-		margin-bottom: 10px;
-	}
-	.field label,
-	.label {
-		display: block;
-		margin-bottom: 3px;
-		font-size: 11px;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--muted);
+		margin-bottom: 0;
 	}
 	.seg {
 		display: grid;
@@ -277,7 +285,7 @@
 		color: #fff;
 	}
 	.legend {
-		margin: 12px 0 14px;
+		margin: 12px 0 0;
 		font-size: 11px;
 		color: var(--muted);
 	}

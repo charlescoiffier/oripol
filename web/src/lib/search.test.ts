@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { searchTerritories } from './search';
+import { levelForId, searchTerritories } from './search';
 
 const names: Record<string, string> = {
 	FR: 'France',
@@ -41,5 +41,18 @@ describe('searchTerritories', () => {
 
 	it('finds the abroad territory', () => {
 		expect(searchTerritories(names, 'etablis')[0].id).toBe('DEP-ZZ');
+	});
+});
+
+describe('levelForId', () => {
+	it('maps a territory id to the map level that shows it', () => {
+		expect(levelForId('FR')).toBe('pays');
+		expect(levelForId('REG-84')).toBe('regions');
+		expect(levelForId('DEP-69')).toBe('departements');
+		expect(levelForId('COM-69123')).toBe('communes');
+	});
+
+	it('falls back to departements for unknown ids', () => {
+		expect(levelForId('???')).toBe('departements');
 	});
 });

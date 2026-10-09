@@ -8,7 +8,7 @@
 
 <section>
 	<div class="head">
-		<h3>Classement</h3>
+		<h3 class="section-title">Classement</h3>
 		<button class="link" type="button" onclick={() => app.resetClassification()}>Réinitialiser</button>
 	</div>
 
@@ -65,13 +65,9 @@
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
-		margin-bottom: 6px;
 	}
-	h3 {
-		font-size: 11px;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--muted);
+	.head .section-title {
+		margin-bottom: 6px;
 	}
 	.link {
 		border: 0;
