@@ -1,0 +1,76 @@
+families:
+  - {id: extreme_gauche, label: "Extrême gauche", position: -2, color: "#7a1f1f"}
+  - {id: gauche, label: "Gauche (dont écologistes EELV)", position: -1, color: "#d9534f"}
+  - {id: centre, label: "Centre", position: 0, color: "#e0a800"}
+  - {id: droite, label: "Droite", position: 1, color: "#3a78c2"}
+  - {id: extreme_droite, label: "Extrême droite", position: 2, color: "#1b2a49"}
+  - {id: divers, label: "Divers / hors axe", position: null, color: "#8a8a8a"}
+  - {id: regionaliste, label: "Régionalistes", position: null, color: "#5b8c5a"}
+
+elections:
+  pres-2002-1:
+    - {key: LAGUILLER, label: "Arlette Laguiller (LO)", family: extreme_gauche}
+    - {key: BESANCENOT, label: "Olivier Besancenot (LCR)", family: extreme_gauche}
+    - {key: GLUCKSTEIN, label: "Daniel Gluckstein (PT)", family: extreme_gauche}
+    - {key: HUE, label: "Robert Hue (PCF)", family: gauche}
+    - {key: JOSPIN, label: "Lionel Jospin (PS)", family: gauche}
+    - {key: MAMERE, label: "Noël Mamère (Les Verts)", family: gauche}
+    - {key: CHEVENEMENT, label: "Jean-Pierre Chevènement (MDC)", family: gauche, to_validate: true}
+    - {key: TAUBIRA, label: "Christiane Taubira (PRG)", family: gauche}
+    - {key: BAYROU, label: "François Bayrou (UDF)", family: centre}
+    - {key: LEPAGE, label: "Corinne Lepage (Cap21)", family: centre, to_validate: true}
+    - {key: CHIRAC, label: "Jacques Chirac (RPR)", family: droite}
+    - {key: MADELIN, label: "Alain Madelin (DL)", family: droite}
+    - {key: BOUTIN, label: "Christine Boutin (FRS)", family: droite}
+    - {key: SAINT JOSSE, label: "Jean Saint-Josse (CPNT)", family: divers}
+    - {key: LE PEN, label: "Jean-Marie Le Pen (FN)", family: extreme_droite}
+    - {key: MEGRET, label: "Bruno Mégret (MNR)", family: extreme_droite}
+  pres-2007-1:
+    - {key: LAGUILLER, label: "Arlette Laguiller (LO)", family: extreme_gauche}
+    - {key: BESANCENOT, label: "Olivier Besancenot (LCR)", family: extreme_gauche}
+    - {key: SCHIVARDI, label: "Gérard Schivardi (PT)", family: extreme_gauche}
+    - {key: BUFFET, label: "Marie-George Buffet (PCF)", family: gauche}
+    - {key: BOVE, label: "José Bové (altermondialiste)", family: gauche, to_validate: true}
+    - {key: ROYAL, label: "Ségolène Royal (PS)", family: gauche}
+    - {key: VOYNET, label: "Dominique Voynet (Les Verts)", family: gauche}
+    - {key: BAYROU, label: "François Bayrou (UDF)", family: centre}
+    - {key: SARKOZY, label: "Nicolas Sarkozy (UMP)", family: droite}
+    - {key: DE VILLIERS, label: "Philippe de Villiers (MPF)", family: droite}
+    - {key: NIHOUS, label: "Frédéric Nihous (CPNT)", family: divers}
+    - {key: LE PEN, label: "Jean-Marie Le Pen (FN)", family: extreme_droite}
+  pres-2012-1:
+    - {key: ARTHAUD, label: "Nathalie Arthaud (LO)", family: extreme_gauche}
+    - {key: POUTOU, label: "Philippe Poutou (NPA)", family: extreme_gauche}
+    - {key: MELENCHON, label: "Jean-Luc Mélenchon (FG)", family: gauche, to_validate: true}
+    - {key: JOLY, label: "Eva Joly (EELV)", family: gauche}
+    - {key: HOLLANDE, label: "François Hollande (PS)", family: gauche}
+    - {key: BAYROU, label: "François Bayrou (MoDem)", family: centre}
+    - {key: SARKOZY, label: "Nicolas Sarkozy (UMP)", family: droite}
+    - {key: DUPONT AIGNAN, label: "Nicolas Dupont-Aignan (DLR)", family: droite, to_validate: true}
+    - {key: CHEMINADE, label: "Jacques Cheminade (S&P)", family: divers, to_validate: true}
+    - {key: LE PEN, label: "Marine Le Pen (FN)", family: extreme_droite}
+  pres-2017-1:
+    - {key: ARTHAUD, label: "Nathalie Arthaud (LO)", family: extreme_gauche}
+    - {key: POUTOU, label: "Philippe Poutou (NPA)", family: extreme_gauche}
+    - {key: MELENCHON, label: "Jean-Luc Mélenchon (FI)", family: gauche, to_validate: true}
+    - {key: HAMON, label: "Benoît Hamon (PS)", family: gauche}
+    - {key: MACRON, label: "Emmanuel Macron (EM)", family: centre}
+    - {key: LASSALLE, label: "Jean Lassalle (Résistons !)", family: divers, to_validate: true}
+    - {key: FILLON, label: "François Fillon (LR)", family: droite}
+    - {key: DUPONT AIGNAN, label: "Nicolas Dupont-Aignan (DLF)", family: droite, to_validate: true}
+    - {key: ASSELINEAU, label: "François Asselineau (UPR)", family: divers, to_validate: true}
+    - {key: CHEMINADE, label: "Jacques Cheminade (S&P)", family: divers, to_validate: true}
+    - {key: LE PEN, label: "Marine Le Pen (FN)", family: extreme_droite}
+  pres-2022-1:
+    - {key: ARTHAUD, label: "Nathalie Arthaud (LO)", family: extreme_gauche}
+    - {key: POUTOU, label: "Philippe Poutou (NPA)", family: extreme_gauche}
+    - {key: ROUSSEL, label: "Fabien Roussel (PCF)", family: gauche}
+    - {key: MELENCHON, label: "Jean-Luc Mélenchon (LFI)", family: gauche, to_validate: true}
+    - {key: JADOT, label: "Yannick Jadot (EELV)", family: gauche}
+    - {key: HIDALGO, label: "Anne Hidalgo (PS)", family: gauche}
+    - {key: MACRON, label: "Emmanuel Macron (LREM)", family: centre}
+    - {key: LASSALLE, label: "Jean Lassalle (Résistons !)", family: divers, to_validate: true}
+    - {key: PECRESSE, label: "Valérie Pécresse (LR)", family: droite}
+    - {key: DUPONT AIGNAN, label: "Nicolas Dupont-Aignan (DLF)", family: droite, to_validate: true}
+    - {key: ZEMMOUR, label: "Éric Zemmour (Reconquête)", family: extreme_droite}
+    - {key: LE PEN, label: "Marine Le Pen (RN)", family: extreme_droite}
