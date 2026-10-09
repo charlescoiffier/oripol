@@ -8,7 +8,7 @@ export type FamilyId =
 	| 'regionaliste';
 
 export type Precision = 'commune' | 'circonscription' | 'canton' | 'departement';
-export type Level = 'regions' | 'departements' | 'communes';
+export type Level = 'pays' | 'regions' | 'departements' | 'communes';
 
 export interface Family {
 	id: FamilyId;

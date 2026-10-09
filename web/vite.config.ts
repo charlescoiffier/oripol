@@ -3,8 +3,6 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	// maplibre-gl charge son worker par URL relative : ne pas le pré-bundler en dev
-	optimizeDeps: { exclude: ['maplibre-gl'] },
 	plugins: [
 		sveltekit({
 			compilerOptions: {

@@ -1,36 +1,52 @@
 <script lang="ts">
 	import * as echarts from 'echarts/core';
 	import { BarChart, LineChart } from 'echarts/charts';
-	import { GridComponent, LegendComponent, MarkLineComponent, TooltipComponent } from 'echarts/components';
+	import { GridComponent, MarkLineComponent, TooltipComponent } from 'echarts/components';
 	import { CanvasRenderer } from 'echarts/renderers';
 	import { onMount } from 'svelte';
 	import type { SeriesPoint } from '../series';
 	import type { Family } from '../types';
 
-	echarts.use([LineChart, BarChart, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
+	echarts.use([LineChart, BarChart, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
 
-	let { name, points, families }: { name: string; points: SeriesPoint[]; families: Family[] } = $props();
+	let {
+		name,
+		kind,
+		points,
+		families
+	}: { name: string; kind: string; points: SeriesPoint[]; families: Family[] } = $props();
 
-	const pct = (v: number | null) => (v === null ? '—' : `${(v * 100).toFixed(1)} %`);
-
-	let scoreEl: HTMLDivElement;
+	let orientationEl: HTMLDivElement;
 	let sharesEl: HTMLDivElement;
-	let scoreChart: echarts.ECharts | undefined;
+	let orientationChart: echarts.ECharts | undefined;
 	let sharesChart: echarts.ECharts | undefined;
 	let mounted = $state(false);
 
+	const usedFamilies = $derived(families.filter((f) => points.some((p) => (p.shares[f.id] ?? 0) > 0)));
+
+	const TOOLTIP = {
+		appendToBody: true,
+		extraCssText: 'z-index: 10000; box-shadow: 0 4px 14px rgba(0,0,0,.18);',
+		textStyle: { fontSize: 12 },
+		borderColor: '#e5e5e5'
+	};
+
+	const wording = (s: number) =>
+		s <= -0.6 ? 'gauche marquée' : s <= -0.2 ? 'plutôt à gauche' : s < 0.2 ? 'centre' : s < 0.6 ? 'plutôt à droite' : 'droite marquée';
+
 	onMount(() => {
-		scoreChart = echarts.init(scoreEl);
+		orientationChart = echarts.init(orientationEl);
 		sharesChart = echarts.init(sharesEl);
 		mounted = true;
 		const resize = () => {
-			scoreChart?.resize();
+			orientationChart?.resize();
 			sharesChart?.resize();
 		};
-		window.addEventListener('resize', resize);
+		const ro = new ResizeObserver(resize);
+		ro.observe(orientationEl);
 		return () => {
-			window.removeEventListener('resize', resize);
-			scoreChart?.dispose();
+			ro.disconnect();
+			orientationChart?.dispose();
 			sharesChart?.dispose();
 		};
 	});
@@ -38,19 +54,48 @@
 	$effect(() => {
 		if (!mounted) return;
 		const years = points.map((p) => String(p.year));
-		scoreChart?.setOption(
+		const scores = points.flatMap((p) => (p.score === null ? [] : [p.score]));
+		const lo = Math.min(0, ...scores);
+		const hi = Math.max(0, ...scores);
+		const pad = Math.max(0.25, (hi - lo) * 0.2);
+		orientationChart?.setOption(
 			{
-				grid: { left: 40, right: 16, top: 24, bottom: 28 },
-				tooltip: { trigger: 'axis' },
-				xAxis: { type: 'category', data: years },
-				yAxis: { type: 'value', min: -2, max: 2, name: 'gauche ← → droite', nameLocation: 'middle', nameGap: 28 },
+				grid: { left: 8, right: 8, top: 10, bottom: 22 },
+				tooltip: {
+					...TOOLTIP,
+					trigger: 'axis',
+					formatter: (params: { dataIndex: number }[]) => {
+						const p = points[params[0].dataIndex];
+						return p.score === null
+							? `${p.year} : pas de donnée`
+							: `<b>${p.year}</b><br/>${wording(p.score)}`;
+					}
+				},
+				xAxis: { type: 'category', data: years, axisTick: { show: false } },
+				yAxis: {
+					type: 'value',
+					min: lo - pad,
+					max: hi + pad,
+					axisLabel: { show: false },
+					axisLine: { show: false },
+					axisTick: { show: false },
+					splitLine: { show: false }
+				},
 				series: [
 					{
-						name: 'Score',
+						name: 'Orientation',
 						type: 'line',
+						symbolSize: 7,
+						itemStyle: { color: '#db4c3f' },
+						lineStyle: { color: '#db4c3f', width: 2 },
 						data: points.map((p) => (p.score === null ? null : Number(p.score.toFixed(3)))),
-						connectNulls: false,
-						markLine: { silent: true, symbol: 'none', data: [{ yAxis: 0 }] }
+						markLine: {
+							silent: true,
+							symbol: 'none',
+							label: { show: false },
+							lineStyle: { color: '#ddd', type: 'dashed' },
+							data: [{ yAxis: 0 }]
+						}
 					}
 				]
 			},
@@ -58,11 +103,10 @@
 		);
 		sharesChart?.setOption(
 			{
-				grid: { left: 40, right: 16, top: 24, bottom: 40 },
-				tooltip: { trigger: 'axis', valueFormatter: (v: number) => `${(v * 100).toFixed(1)} %` },
-				legend: { bottom: 0, type: 'scroll' },
-				xAxis: { type: 'category', data: years },
-				yAxis: { type: 'value', max: 1, axisLabel: { formatter: (v: number) => `${v * 100} %` } },
+				grid: { left: 36, right: 8, top: 10, bottom: 22 },
+				tooltip: { ...TOOLTIP, trigger: 'axis', valueFormatter: (v: number) => `${(v * 100).toFixed(1)} %` },
+				xAxis: { type: 'category', data: years, axisTick: { show: false } },
+				yAxis: { type: 'value', max: 1, axisLabel: { formatter: (v: number) => `${Math.round(v * 100)} %` } },
 				series: [
 					...families.map((f) => ({
 						name: f.label,
@@ -72,10 +116,11 @@
 						data: points.map((p) => p.shares[f.id] ?? 0)
 					})),
 					{
-						name: 'Abstention (rapportée aux inscrits)',
+						name: 'Abstention (sur inscrits)',
 						type: 'line' as const,
-						itemStyle: { color: '#555' },
-						lineStyle: { type: 'dashed' as const },
+						itemStyle: { color: '#444' },
+						lineStyle: { type: 'dashed' as const, width: 1.5 },
+						symbolSize: 5,
 						data: points.map((p) => p.abstention)
 					}
 				]
@@ -85,80 +130,86 @@
 	});
 </script>
 
-<section class="panel">
-	<h2>{name}</h2>
+<section>
+	<header>
+		<h2>{name}</h2>
+		<span class="kind">{kind}</span>
+	</header>
 	{#if points.length === 0}
 		<p class="empty">Pas de données pour ce territoire.</p>
 	{/if}
-	<h3>Score gauche-droite</h3>
-	<div bind:this={scoreEl} class="chart"></div>
-	<h3>Parts des suffrages exprimés</h3>
-	<div bind:this={sharesEl} class="chart tall"></div>
-	{#if points.length}
-		<table>
-			<caption>Données du territoire</caption>
-			<thead>
-				<tr><th>Année</th><th>Précision</th><th>Score</th><th>Abstention</th><th>Blancs + nuls</th></tr>
-			</thead>
-			<tbody>
-				{#each points as p (p.electionId)}
-					<tr>
-						<td>{p.year}</td>
-						<td>{p.precision}</td>
-						<td>{p.score === null ? '—' : p.score.toFixed(2)}</td>
-						<td>{pct(p.abstention)}</td>
-						<td>{pct(p.blancsNuls)}</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-		<p class="foot">Abstention et blancs + nuls sont rapportés aux inscrits ; avant 2014 les blancs sont comptés avec les nuls.</p>
-	{/if}
+
+	<h3>Évolution de l'orientation du vote</h3>
+	<p class="axis-hint">Plus haut : plus à droite · plus bas : plus à gauche</p>
+	<div bind:this={orientationEl} class="chart short"></div>
+
+	<h3>Répartition des votes</h3>
+	<div bind:this={sharesEl} class="chart"></div>
+	<ul class="legend">
+		{#each usedFamilies as f (f.id)}
+			<li><span class="dot" style="background:{f.color}"></span>{f.label}</li>
+		{/each}
+		<li><span class="dash"></span>Abstention (sur inscrits)</li>
+	</ul>
 </section>
 
 <style>
-	.chart {
-		width: 100%;
-		height: 220px;
-	}
-	.chart.tall {
-		height: 300px;
-	}
-	.empty {
-		color: #666;
-		font-style: italic;
-	}
-	table {
-		width: 100%;
-		margin-top: 1rem;
-		border-collapse: collapse;
-		font-size: 0.8rem;
-	}
-	caption {
-		text-align: left;
-		font-weight: 600;
-		margin-bottom: 0.25rem;
-	}
-	th,
-	td {
-		text-align: right;
-		padding: 0.15rem 0.3rem;
-		border-bottom: 1px solid #eee;
-	}
-	th:first-child,
-	td:first-child {
-		text-align: left;
-	}
-	.foot {
-		font-size: 0.7rem;
-		color: #666;
+	header {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
 	}
 	h2 {
-		margin: 0 0 0.5rem;
+		font-size: 17px;
+	}
+	.kind {
+		color: var(--muted);
+		font-size: 12px;
 	}
 	h3 {
-		margin: 1rem 0 0.25rem;
-		font-size: 0.9rem;
-		color: #444;
+		margin: 16px 0 4px;
+		font-size: 11px;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--muted);
+	}
+	.axis-hint {
+		margin: 0;
+		font-size: 11px;
+		color: var(--muted);
+	}
+	.chart {
+		width: 100%;
+		height: 230px;
+	}
+	.chart.short {
+		height: 150px;
+	}
+	.empty {
+		color: var(--muted);
+		font-style: italic;
+	}
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 12px;
+		margin: 6px 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 11px;
+	}
+	.legend li {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+	.dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 2px;
+	}
+	.dash {
+		width: 12px;
+		border-top: 2px dashed #444;
 	}
 </style>

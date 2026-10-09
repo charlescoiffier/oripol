@@ -9,6 +9,7 @@ import copy
 import csv
 import json
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -52,7 +53,22 @@ def read_comer() -> list[tuple[str, str, str]]:
         return [(r["COM_COMER"], r["COMER"], r["LIBELLE_COMER"]) for r in csv.DictReader(f)]
 
 
+def build_tiles() -> None:
+    # la couche communes (35 000 polygones) n'est embarquée qu'à partir du zoom 6 : chargement initial rapide
+    args = ["tippecanoe", "-o", str(OUT / "contours.pmtiles"), "-Z0", "-z10", "--drop-densest-as-needed",
+            "--simplify-only-low-zooms", "--force", "-q"]
+    for name in ("regions", "departements", "communes"):
+        layer = {"file": str(TMP / f"{name}.geojson"), "layer": name}
+        if name == "communes":
+            layer["minzoom"] = 6
+        args += ["-L", json.dumps(layer)]
+    subprocess.run(args, check=True)
+
+
 def main() -> None:
+    if "--tiles-only" in sys.argv:  # réutilise les GeoJSON déjà téléchargés
+        build_tiles()
+        return
     TMP.mkdir(parents=True, exist_ok=True)
     names: dict[str, str] = {"FR": "France"}
     with httpx.Client(follow_redirects=True) as client:
@@ -88,13 +104,9 @@ def main() -> None:
             if not f["properties"]["id"].startswith(("DEP-9", "REG-9")) or f["properties"]["id"] not in names:
                 names[f["properties"]["id"]] = f["properties"]["name"]
 
-    args = ["tippecanoe", "-o", str(OUT / "contours.pmtiles"), "-Z0", "-z10", "--drop-densest-as-needed",
-            "--simplify-only-low-zooms", "--force", "-q"]
     for name, fs in layers.items():
-        p = TMP / f"{name}.geojson"
-        p.write_text(json.dumps({"type": "FeatureCollection", "features": fs}), encoding="utf-8")
-        args += ["-L", f"{name}:{p}"]
-    subprocess.run(args, check=True)
+        (TMP / f"{name}.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": fs}), encoding="utf-8")
+    build_tiles()
 
     names_path = OUT / "names.json"
     existing = json.loads(names_path.read_text(encoding="utf-8")) if names_path.exists() else {}

@@ -7,7 +7,7 @@ export interface AppState {
 	classification: Classification;
 }
 
-const LEVELS: ReadonlySet<string> = new Set(['regions', 'departements', 'communes']);
+const LEVELS: ReadonlySet<string> = new Set(['pays', 'regions', 'departements', 'communes']);
 
 export function encodeState(s: AppState): string {
 	const q = new URLSearchParams();
