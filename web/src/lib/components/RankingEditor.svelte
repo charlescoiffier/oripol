@@ -38,7 +38,7 @@
 	</div>
 
 	<details>
-		<summary>Rattachement des candidats</summary>
+		<summary>Rattachement des candidats et nuances</summary>
 		<div class="lists">
 			{#each Object.entries(lists) as [id, info] (id)}
 				<span class="name">{info.label}</span>

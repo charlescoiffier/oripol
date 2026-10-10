@@ -19,7 +19,12 @@ def test_valid_tables_pass():
 
 def test_sum_mismatch_raises():
     with pytest.raises(ValueError, match="somme des voix"):
-        validate(*tables(voix_y=29), M)
+        validate(*tables(voix_y=60), M)
+
+
+def test_tiny_source_discrepancy_is_tolerated():
+    # le fichier officiel contient quelques communes à 1-2 voix d'écart (recomptes) : on ne bloque pas
+    validate(*tables(voix_y=29), M)
 
 
 def test_unmapped_list_raises():

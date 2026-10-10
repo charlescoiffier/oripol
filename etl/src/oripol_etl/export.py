@@ -7,7 +7,7 @@ import polars as pl
 
 from .families import Family, ListMapping
 
-LABELS = {"pres": "Présidentielle"}
+LABELS = {"pres": "Présidentielle", "legi": "Législatives"}
 
 
 def _parse(election_id: str) -> tuple[str, int, int]:
@@ -17,7 +17,7 @@ def _parse(election_id: str) -> tuple[str, int, int]:
 
 def _label(election_id: str) -> str:
     kind, year, rnd = _parse(election_id)
-    return f"{LABELS[kind]} {year} – {'1er' if rnd == 1 else f'{rnd}e'} tour"
+    return f"{LABELS[kind]} {year} – {'1er' if rnd == 1 else '2d'} tour"
 
 
 def write_site_data(

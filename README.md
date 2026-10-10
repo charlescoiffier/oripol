@@ -18,7 +18,7 @@ Aucun compte, aucun serveur applicatif : le site est statique et tout le calcul 
 
 ## Le projet en bref
 
-Oripol colore une carte de France selon l'orientation du vote (de la gauche à la droite) pour chaque élection, et trace l'évolution d'un territoire dans le temps. Cette version couvre le 1er tour des élections présidentielles de 2002 à 2022, pour **les 35 000 communes**, les départements, les régions, l'outre-mer et les Français établis hors de France.
+Oripol colore une carte de France selon l'orientation du vote (de la gauche à la droite) pour chaque élection, et trace l'évolution d'un territoire dans le temps. Cette version couvre les présidentielles (1er et 2d tours, 2002 à 2022) et les législatives (1er et 2d tours, 2002 à 2024), pour **les 35 000 communes**, les départements, les régions, l'outre-mer et les Français établis hors de France.
 
 Le classement des candidats par famille politique est proposé par défaut, mais chacun peut le modifier.
 
@@ -37,7 +37,7 @@ Les territoires d'outre-mer sont placés dans la carte elle-même, en bas à gau
 
 ## Comprendre le score
 
-- Chaque candidat est rattaché à une famille : extrême gauche, gauche, centre, droite, extrême droite, divers, régionalistes. Les écologistes (EELV et prédécesseurs) sont classés à gauche par défaut.
+- Chaque candidat (présidentielles) ou chaque nuance politique du ministère de l'Intérieur (législatives) est rattaché à une famille : extrême gauche, gauche, centre, droite, extrême droite, divers, régionalistes. Les écologistes (EELV et prédécesseurs) sont classés à gauche par défaut.
 - Chaque famille occupe une position sur un axe de `-2` (extrême gauche) à `+2` (extrême droite). Les signes servent seulement à orienter l'axe, ils n'ont aucune valeur de jugement.
 - Le **score** d'un territoire est la somme, sur les familles placées sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Les familles hors axe (divers, régionalistes) diluent le score mais apparaissent dans la répartition des votes.
 - La couleur de la carte sature à `±0,6` et monte vite aux faibles écarts : un territoire fortement orienté n'a pas besoin d'atteindre `±2`, et un territoire peu orienté reste nettement coloré. Un territoire sans donnée est gris foncé.
@@ -59,7 +59,7 @@ La carte et les courbes se recalculent aussitôt. L'adresse de la page conserve 
 - Un territoire sans donnée apparaît en gris, jamais comme « centre ».
 - Les tendances dépendent beaucoup du classement : avec les choix par défaut (La France insoumise à gauche, Emmanuel Macron au centre), la droite et l'extrême droite semblent progresser de 2002 à 2022. Rattacher ces candidats autrement change nettement la courbe.
 - Le jeu source est incomplet pour deux scrutins : en 2002 il omet Mayotte, les collectivités d'outre-mer et les Français de l'étranger ; en 2007, les collectivités d'outre-mer et les Français de l'étranger. Le total « Pays » de ces deux années est donc un peu inférieur au résultat officiel.
-- Pas encore de législatives, municipales ni départementales.
+- Pas encore de municipales, départementales, régionales ni européennes. Au 2d tour des législatives, seules les communes concernées par un second tour ont des résultats.
 
 ---
 
@@ -74,7 +74,7 @@ Prérequis : [uv](https://docs.astral.sh/uv/), Node.js et [tippecanoe](https://g
 ./build-data.sh   # (re)génère seulement les données : ~240 Mo téléchargés la première fois
 ```
 
-Les données générées (`web/static/data/`) et les sources téléchargées (`etl/data/`) ne sont pas versionnées : tout ce qui peut être régénéré est exclu du dépôt.
+Les résultats de chaque élection ne sont chargés qu'à la demande (environ 2 Mo chacune). Les données générées (`web/static/data/`) et les sources téléchargées (`etl/data/`) ne sont pas versionnées : tout ce qui peut être régénéré est exclu du dépôt.
 
 Avec Node 23.5, `npm install` doit recevoir `--engine-strict=false` (c'est ce que fait `start.sh`).
 
@@ -87,7 +87,7 @@ sources officielles (parquet, CSV)
   → site statique SvelteKit : MapLibre (cartes) + ECharts (courbes), score calculé dans le navigateur
 ```
 
-- **ETL** (`etl/`) : lit les fichiers, résout les fusions de communes avec l'historique des mouvements du COG, rattache les candidats à une famille (`etl/mappings/presidentielle.yaml`), agrège commune → département → région → pays, puis **échoue sans rien écrire** si la somme des voix d'une commune diffère des exprimés ou si un candidat n'a pas de famille.
+- **ETL** (`etl/`) : lit les fichiers, résout les fusions de communes avec l'historique des mouvements du COG, rattache les candidats ou les nuances à une famille (`etl/mappings/` : `families.yaml`, `presidentielle.yaml`, `legislatives.yaml`), agrège commune → département → région → pays, puis **échoue sans rien écrire** si la somme des voix d'une commune diffère des exprimés ou si un candidat n'a pas de famille.
 - **Site** (`web/`) : charge les résultats bruts et recalcule le score à chaque réglage, ce qui rend le classement ajustable sans serveur. Les contours sont des tuiles PMTiles ; la couche des 35 000 communes n'est embarquée qu'à partir du zoom 6.
 - **Outre-mer** : `etl/src/oripol_etl/inset.py` déplace et met à l'échelle chaque territoire dans un cadre au sud-ouest de la métropole, en conservant sa forme réelle (conversion longitude → distance selon la latitude).
 - **Territoires** : identifiants `FR`, `REG-<code>`, `DEP-<code>` et `COM-<code INSEE>`. Les collectivités d'outre-mer sont à la fois leur propre département et leur propre région ; les Français de l'étranger forment le département fictif `DEP-ZZ`, sans carte.
@@ -127,6 +127,6 @@ Les paramètres invalides sont ignorés sans erreur.
 
 ```bash
 uv run --project etl pytest etl/tests   # ETL : résolution des fusions, agrégation, contrôles, export
-npm --prefix web test                    # logique du site : score, URL, couleurs, recherche, séries
+npm --prefix web test                    # logique du site : score, URL, couleurs, recherche, séries, hiérarchie
 npm --prefix web run check               # vérification des types
 ```

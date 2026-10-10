@@ -31,7 +31,7 @@ describe('buildSeries', () => {
 	];
 
 	it('sorts by year, keeps only the requested type, and omits elections without data', () => {
-		const s = buildSeries(elections, 'pres', 'DEP-69', families, NO_OVERRIDES);
+		const s = buildSeries(elections, 'pres', 1, 'DEP-69', families, NO_OVERRIDES);
 		expect(s.map((p) => p.year)).toEqual([2002, 2012]);
 		expect(s[0].score).toBeCloseTo(0.4);
 		expect(s[1].score).toBeCloseTo(-0.2);
@@ -41,13 +41,20 @@ describe('buildSeries', () => {
 		const e = mk('pres-2002-1', 2002, {
 			'DEP-69': { ...withIds('pres-2002-1', res(30, 70)), blancs: 10, nuls: 10 }
 		});
-		const [p] = buildSeries([e], 'pres', 'DEP-69', families, NO_OVERRIDES);
+		const [p] = buildSeries([e], 'pres', 1, 'DEP-69', families, NO_OVERRIDES);
 		expect(p.blancsNuls).toBeCloseTo(0.1); // 20 / 200 inscrits
 		expect(p.precision).toBe('commune');
 	});
 
+	it('keeps first and second rounds in separate series', () => {
+		const second = { ...mk('pres-2012-2', 2012, { 'DEP-69': withIds('pres-2012-2', res(55, 45)) }), round: 2 };
+		const all = [...elections, second];
+		expect(buildSeries(all, 'pres', 2, 'DEP-69', families, NO_OVERRIDES).map((p) => p.electionId)).toEqual(['pres-2012-2']);
+		expect(buildSeries(all, 'pres', 1, 'DEP-69', families, NO_OVERRIDES).map((p) => p.year)).toEqual([2002, 2012]);
+	});
+
 	it('computes abstention from inscrits and votants', () => {
-		const s = buildSeries(elections, 'pres', 'DEP-69', families, NO_OVERRIDES);
+		const s = buildSeries(elections, 'pres', 1, 'DEP-69', families, NO_OVERRIDES);
 		expect(s[0].abstention).toBeCloseTo(0.5);
 	});
 });

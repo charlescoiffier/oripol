@@ -19,7 +19,8 @@
 		<section>
 			<h3>Principe de calcul</h3>
 			<p>
-				Chaque candidat est rattaché à une famille politique : extrême gauche, gauche, centre, droite,
+				Chaque candidat (présidentielles) ou chaque nuance politique du ministère de l'Intérieur (législatives) est
+				rattaché à une famille politique : extrême gauche, gauche, centre, droite,
 				extrême droite, divers et régionalistes. Les écologistes (EELV et prédécesseurs) sont classés à
 				gauche par défaut.
 			</p>
@@ -45,7 +46,7 @@
 		<section>
 			<h3>Méthodologie</h3>
 			<ul>
-				<li>Les résultats sont ceux du 1er tour des élections présidentielles, de 2002 à 2022.</li>
+				<li>Les résultats couvrent les présidentielles (1er et 2d tours, 2002 à 2022) et les législatives (1er et 2d tours, 2002 à 2024), commune par commune. Au 2d tour des législatives, seules les communes où un second tour a eu lieu ont des résultats.</li>
 				<li>Les communes fusionnées sont regroupées dans la commune actuelle (découpage 2026).</li>
 				<li>L'abstention et les blancs et nuls sont rapportés aux inscrits.</li>
 				<li>Un territoire sans donnée apparaît en gris, jamais comme « centre ».</li>
@@ -70,6 +71,11 @@
 					Contours : <a href="https://github.com/gregoiredavid/france-geojson" target="_blank" rel="noreferrer">france-geojson</a>
 					(régions et départements, d'après IGN Admin Express) et l'API
 					<a href="https://geo.api.gouv.fr" target="_blank" rel="noreferrer">Découpage administratif</a> (communes).
+				</li>
+				<li>
+					Nuances politiques :
+					<a href="https://www.data.gouv.fr/datasets/6481e741d4cf002ec0efec9d" target="_blank" rel="noreferrer">dictionnaire des nuances</a>
+					du ministère de l'Intérieur (blocs de la circulaire de 2026), complété à la main pour les codes anciens.
 				</li>
 				<li>Code officiel géographique de l'Insee (millésime 2026) : fusions de communes, collectivités d'outre-mer.</li>
 			</ul>

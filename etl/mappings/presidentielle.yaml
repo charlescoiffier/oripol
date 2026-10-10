@@ -1,12 +1,3 @@
-families:
-  - {id: extreme_gauche, label: "Extrême gauche", position: -2, color: "#7a1f1f"}
-  - {id: gauche, label: "Gauche", position: -1, color: "#d9534f"}
-  - {id: centre, label: "Centre", position: 0, color: "#e0a800"}
-  - {id: droite, label: "Droite", position: 1, color: "#3a78c2"}
-  - {id: extreme_droite, label: "Extrême droite", position: 2, color: "#1b2a49"}
-  - {id: divers, label: "Divers / hors axe", position: null, color: "#8a8a8a"}
-  - {id: regionaliste, label: "Régionalistes", position: null, color: "#5b8c5a"}
-
 elections:
   pres-2002-1:
     - {key: LAGUILLER, label: "Arlette Laguiller (LO)", family: extreme_gauche}
@@ -73,4 +64,19 @@ elections:
     - {key: PECRESSE, label: "Valérie Pécresse (LR)", family: droite}
     - {key: DUPONT AIGNAN, label: "Nicolas Dupont-Aignan (DLF)", family: extreme_droite}
     - {key: ZEMMOUR, label: "Éric Zemmour (Reconquête)", family: extreme_droite}
+    - {key: LE PEN, label: "Marine Le Pen (RN)", family: extreme_droite}
+  pres-2002-2:
+    - {key: CHIRAC, label: "Jacques Chirac (RPR)", family: droite}
+    - {key: LE PEN, label: "Jean-Marie Le Pen (FN)", family: extreme_droite}
+  pres-2007-2:
+    - {key: SARKOZY, label: "Nicolas Sarkozy (UMP)", family: droite}
+    - {key: ROYAL, label: "Ségolène Royal (PS)", family: gauche}
+  pres-2012-2:
+    - {key: HOLLANDE, label: "François Hollande (PS)", family: gauche}
+    - {key: SARKOZY, label: "Nicolas Sarkozy (UMP)", family: droite}
+  pres-2017-2:
+    - {key: MACRON, label: "Emmanuel Macron (EM)", family: centre}
+    - {key: LE PEN, label: "Marine Le Pen (FN)", family: extreme_droite}
+  pres-2022-2:
+    - {key: MACRON, label: "Emmanuel Macron (LREM)", family: centre}
     - {key: LE PEN, label: "Marine Le Pen (RN)", family: extreme_droite}

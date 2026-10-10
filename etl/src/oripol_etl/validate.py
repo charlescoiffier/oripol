@@ -9,12 +9,18 @@ def validate(
     participation: pl.DataFrame,
     votes: pl.DataFrame,
     mappings: dict[str, dict[str, ListMapping]],
+    tolerance_abs: int = 3,
+    tolerance_rel: float = 0.005,
 ) -> None:
+    """Contrôles bloquants. Un écart de quelques voix (recomptes dans le fichier officiel) est toléré."""
     sums = votes.group_by(["election_id", "code"]).agg(pl.col("voix").sum().alias("sum_voix"))
     bad = (
         participation.join(sums, on=["election_id", "code"], how="left")
         .with_columns(pl.col("sum_voix").fill_null(0))
-        .filter(pl.col("sum_voix") != pl.col("exprimes"))
+        .filter(
+            (pl.col("sum_voix") - pl.col("exprimes")).abs()
+            > pl.max_horizontal(pl.lit(tolerance_abs), (pl.col("exprimes") * tolerance_rel).ceil())
+        )
     )
     if bad.height:
         raise ValueError(f"somme des voix ≠ exprimés pour {bad.height} commune(s):\n{bad.head(10)}")

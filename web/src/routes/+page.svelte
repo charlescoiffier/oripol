@@ -5,6 +5,7 @@
 	import { app } from '../lib/app-state.svelte';
 	import { NO_DATA_COLOR, SCORE_DOMAIN, scoreColor } from '../lib/color';
 	import { loadDataset, type Dataset } from '../lib/data';
+	import { defaultElection, groupByType, siblings } from '../lib/elections';
 	import { score } from '../lib/score';
 	import { buildSeries } from '../lib/series';
 	import { planLevelChange } from '../lib/hierarchy';
@@ -15,10 +16,12 @@
 	import RankingEditor from '../lib/components/RankingEditor.svelte';
 	import TerritoryPanel from '../lib/components/TerritoryPanel.svelte';
 	import TerritorySearch from '../lib/components/TerritorySearch.svelte';
-	import type { Level } from '../lib/types';
+	import type { ElectionData, Level } from '../lib/types';
 	import type { Focus } from '../lib/components/MapView.svelte';
 
 	let dataset = $state<Dataset | null>(null);
+	let loaded = $state<Record<string, ElectionData>>({}); // résultats chargés à la demande
+	let loadError = $state<string | null>(null);
 	let error = $state<string | null>(null);
 	let leftOpen = $state(true);
 	let rightOpen = $state(true);
@@ -42,8 +45,7 @@
 		try {
 			const d = await loadDataset(fetch, BASE);
 			const state = decodeState(location.search.slice(1), new Set(d.families.map((f) => f.id)));
-			const latest = d.elections.at(-1)?.id ?? null;
-			state.election = d.elections.some((e) => e.id === state.election) ? state.election : latest;
+			state.election = d.index.some((e) => e.id === state.election) ? state.election : defaultElection(d.index);
 			app.hydrate(state);
 			dataset = d;
 		} catch (e) {
@@ -56,7 +58,33 @@
 		goto(`?${encodeState(app.snapshot())}`, { shallow: true, replace: true });
 	});
 
-	const election = $derived(dataset?.elections.find((e) => e.id === app.election) ?? null);
+	const pending = new Set<string>();
+	function ensure(id: string) {
+		if (!dataset || loaded[id] || pending.has(id)) return;
+		pending.add(id);
+		dataset
+			.loadElection(id)
+			.then((e) => (loaded[id] = e))
+			.catch((e) => (loadError = e instanceof Error ? e.message : String(e)))
+			.finally(() => pending.delete(id));
+	}
+
+	// l'élection affichée, puis (une fois un territoire choisi) les élections comparables pour sa courbe
+	$effect(() => {
+		if (app.election) ensure(app.election);
+	});
+	$effect(() => {
+		if (!dataset || !app.election || !app.territory) return;
+		for (const s of siblings(dataset.index, app.election)) ensure(s.id);
+	});
+
+	const election = $derived(app.election ? (loaded[app.election] ?? null) : null);
+	const electionGroups = $derived(dataset ? groupByType(dataset.index) : []);
+	const electionLists = $derived(
+		app.election && dataset
+			? Object.fromEntries(Object.entries(dataset.lists).filter(([id]) => id.startsWith(`${app.election}.`)))
+			: {}
+	);
 
 	const quantized = (s: number | null) => {
 		if (s === null) return null;
@@ -91,7 +119,7 @@
 
 	const points = $derived(
 		dataset && election && app.territory
-			? buildSeries(dataset.elections, election.type, app.territory, dataset.families, app.classification)
+			? buildSeries(Object.values(loaded), election.type, election.round, app.territory, dataset.families, app.classification)
 			: []
 	);
 	const territoryName = $derived(app.territory ? (dataset?.names[app.territory] ?? app.territory) : null);
@@ -171,8 +199,12 @@
 				<div class="field">
 					<label for="election" class="section-title first">Élection</label>
 					<select id="election" bind:value={app.election}>
-						{#each dataset.elections as e (e.id)}
-							<option value={e.id}>{e.label}</option>
+						{#each electionGroups as g (g.type)}
+							<optgroup label={g.label}>
+								{#each g.entries as e (e.id)}
+									<option value={e.id}>{e.label}</option>
+								{/each}
+							</optgroup>
 						{/each}
 					</select>
 				</div>
@@ -204,9 +236,12 @@
 					{/if}
 				</div>
 
-				{#if election}
-					<RankingEditor families={dataset.families} lists={election.lists} />
+				{#if loadError}
+					<p class="loading-election error">Chargement impossible : {loadError}</p>
+				{:else if !election}
+					<p class="loading-election">Chargement de l'élection…</p>
 				{/if}
+				<RankingEditor families={dataset.families} lists={electionLists} />
 
 				<div class="about">
 					<button class="btn" type="button" onclick={() => (aboutOpen = true)}>À propos</button>
@@ -340,6 +375,12 @@
 		display: flex;
 		justify-content: space-between;
 		margin-top: 2px;
+	}
+	.loading-election {
+		margin: 8px 0 0;
+		font-size: 11px;
+		font-style: italic;
+		color: var(--muted);
 	}
 	.zoom-hint {
 		margin: 6px 0 0;

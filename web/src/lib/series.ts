@@ -16,12 +16,13 @@ export interface SeriesPoint {
 export function buildSeries(
 	elections: ElectionData[],
 	type: string,
+	round: number,
 	territoryId: string,
 	families: Family[],
 	c: Classification
 ): SeriesPoint[] {
 	return elections
-		.filter((e) => e.type === type && e.territories[territoryId])
+		.filter((e) => e.type === type && e.round === round && e.territories[territoryId])
 		.sort((a, b) => a.year - b.year || a.round - b.round)
 		.map((e) => {
 			const r = e.territories[territoryId];

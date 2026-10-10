@@ -6,7 +6,7 @@ from . import config as c
 from .aggregate import build_payload
 from .cog import build_resolver
 from .export import write_parents, write_site_data
-from .families import load_families, load_list_mappings
+from .families import load_all_mappings, load_families
 from .geo import build_geo
 from .ministry import to_commune_tables
 from .validate import validate, validate_coverage
@@ -27,8 +27,8 @@ def run() -> None:
     current = set(communes["com"].to_list()) | set(comer_communes["com_comer"].to_list())
     resolver = build_resolver(_csv(c.COG_MOUVEMENTS), current)
 
-    families = load_families(c.MAPPING)
-    mappings = load_list_mappings(c.MAPPING)
+    families = load_families(c.FAMILIES)
+    mappings = load_all_mappings(c.MAPPINGS, {f.id for f in families})
     participation, votes = to_commune_tables(_table(c.GENERAL_FILE), _table(c.CANDIDATES_FILE), c.COLUMNS, resolver)
     geo = build_geo(communes, comer_communes, participation["code"].unique().to_list())
 

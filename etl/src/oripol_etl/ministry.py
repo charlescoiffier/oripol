@@ -22,12 +22,19 @@ class ColumnMap:
     cand_election_id: str
     cand_bureau_id: str
     cand_name: str
+    cand_nuance: str
     cand_votes: str
 
 
+# types de scrutin pris en charge ; ceux dont les résultats sont rattachés par nom de candidat
+# (présidentielle) plutôt que par nuance politique
+SUPPORTED_TYPES = ("pres", "legi")
+KEYED_BY_NAME = {"pres"}
+
+
 def election_id_from_source(source_id: str) -> str | None:
-    m = re.fullmatch(r"(\d{4})_pres_t1", source_id)
-    return f"pres-{m.group(1)}-1" if m else None
+    m = re.fullmatch(r"(\d{4})_(" + "|".join(SUPPORTED_TYPES) + r")_t([12])", source_id)
+    return f"{m.group(2)}-{m.group(1)}-{m.group(3)}" if m else None
 
 
 def to_commune_tables(
@@ -56,10 +63,17 @@ def to_commune_tables(
         pl.col(cm.cand_election_id).replace(id_map).alias("election_id"),
         pl.col(cm.cand_bureau_id).alias("bureau"),
         pl.col(cm.cand_name).alias("name"),
+        pl.col(cm.cand_nuance).alias("nuance"),
         pl.col(cm.cand_votes).alias("voix"),
     )
     names = {n: normalize_key(str(n)) for n in c["name"].unique().to_list()}
-    c = c.with_columns(pl.col("name").replace(names).alias("list_key"))
+    etype = pl.col("election_id").str.split("-").list.first()
+    c = c.with_columns(
+        pl.when(etype.is_in(list(KEYED_BY_NAME)))
+        .then(pl.col("name").replace(names))
+        .otherwise(pl.col("nuance").fill_null("NC"))  # NC : liste sans nuance attribuée
+        .alias("list_key")
+    )
     joined = c.join(g.select("election_id", "bureau", "code"), on=["election_id", "bureau"], how="inner")
     votes = joined.group_by(["election_id", "code", "list_key"]).agg(pl.col("voix").sum())
     return participation, votes

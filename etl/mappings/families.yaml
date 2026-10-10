@@ -1,0 +1,8 @@
+families:
+  - {id: extreme_gauche, label: "Extrême gauche", position: -2, color: "#7a1f1f"}
+  - {id: gauche, label: "Gauche", position: -1, color: "#d9534f"}
+  - {id: centre, label: "Centre", position: 0, color: "#e0a800"}
+  - {id: droite, label: "Droite", position: 1, color: "#3a78c2"}
+  - {id: extreme_droite, label: "Extrême droite", position: 2, color: "#1b2a49"}
+  - {id: divers, label: "Divers / hors axe", position: null, color: "#8a8a8a"}
+  - {id: regionaliste, label: "Régionalistes", position: null, color: "#5b8c5a"}

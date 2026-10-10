@@ -1,17 +1,14 @@
+import type { IndexEntry } from './elections';
 import type { ElectionData, Family, ListInfo, TerritoryResult } from './types';
 
 export interface Dataset {
-	elections: ElectionData[];
+	/** Liste des élections (métadonnées seules : les résultats se chargent à la demande). */
+	index: IndexEntry[];
 	families: Family[];
 	names: Record<string, string>;
-}
-
-interface IndexEntry {
-	id: string;
-	type: string;
-	year: number;
-	round: number;
-	label: string;
+	/** Rattachement liste/candidat → famille, toutes élections confondues (clés `<élection>.<liste>`). */
+	lists: Record<string, ListInfo>;
+	loadElection: (id: string) => Promise<ElectionData>;
 }
 
 export function decodeTerritories(raw: {
@@ -48,16 +45,22 @@ export async function loadDataset(fetchFn: typeof fetch, base: string): Promise<
 		get<{ families: Family[]; lists: Record<string, ListInfo> }>('classification.json'),
 		get<Record<string, string>>('names.json')
 	]);
-	const elections = await Promise.all(
-		index.elections.map(async (e) => {
-			const body = await get<{ lists: string[]; territories: Record<string, number[]> }>(
-				`elections/${e.id}.json`
-			);
-			const lists = Object.fromEntries(
-				Object.entries(classification.lists).filter(([id]) => id.startsWith(`${e.id}.`))
-			);
-			return { ...e, lists, territories: decodeTerritories(body) } satisfies ElectionData;
-		})
-	);
-	return { elections, families: classification.families, names };
+	const cache = new Map<string, Promise<ElectionData>>();
+	const loadElection = (id: string): Promise<ElectionData> => {
+		let p = cache.get(id);
+		if (!p) {
+			const entry = index.elections.find((e) => e.id === id);
+			if (!entry) return Promise.reject(new Error(`Élection inconnue : ${id}`));
+			p = get<{ lists: string[]; territories: Record<string, number[]> }>(`elections/${id}.json`).then((body) => {
+				const lists = Object.fromEntries(
+					Object.entries(classification.lists).filter(([key]) => key.startsWith(`${id}.`))
+				);
+				return { ...entry, lists, territories: decodeTerritories(body) } satisfies ElectionData;
+			});
+			p.catch(() => cache.delete(id)); // une erreur réseau n'est pas mise en cache
+			cache.set(id, p);
+		}
+		return p;
+	};
+	return { index: index.elections, families: classification.families, names, lists: classification.lists, loadElection };
 }
