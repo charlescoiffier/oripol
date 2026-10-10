@@ -146,10 +146,8 @@
 			m.setLayoutProperty(`${l}-fill`, 'visibility', fillShown[l] ? 'visible' : 'none');
 			m.setLayoutProperty(`${l}-line`, 'visibility', lineShown[l] ? 'visible' : 'none');
 		}
-		// au niveau communes, les limites départementales servent de repère à petite échelle, puis s'effacent
-		// dès que les communes apparaissent
-		m.setPaintProperty('departements-line', 'line-color', level === 'communes' ? '#8a8f98' : '#ffffff');
-		m.setPaintProperty('departements-line', 'line-width', level === 'communes' ? 0.8 : 0.7);
+		// au niveau communes, les limites départementales (blanches, comme au niveau Départements) servent de
+		// repère à petite échelle, puis s'effacent dès que les communes apparaissent
 		m.setPaintProperty(
 			'departements-line',
 			'line-opacity',
