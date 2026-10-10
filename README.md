@@ -24,10 +24,10 @@ Le classement des candidats par famille politique est proposé par défaut, mais
 
 ## Utiliser la carte
 
-1. Choisir une **élection** dans le panneau de gauche.
+1. Choisir un **type d'élection** (présidentielles, législatives), puis l'**élection** précise dans le second menu, dans le panneau de gauche. Changer de type garde la même année quand elle existe.
 2. Choisir un **niveau** : Pays, Régions, Départements ou Communes. Au niveau Communes, il faut zoomer pour distinguer les communes.
 3. Cliquer sur un territoire (il est entouré d'un trait fin), ou le chercher dans la barre « Choix du territoire » du panneau de droite : la liste se réduit pendant la frappe. Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus. Un double clic sur un territoire zoome sur son emprise.
-4. Lire sa fiche : **évolution de l'orientation du vote** depuis 2002, puis **répartition des votes** par famille, avec l'abstention.
+4. Lire sa fiche : **évolution de l'orientation du vote** depuis 2002, puis **répartition des votes** par famille, avec l'abstention. Passer la souris sur une année ouvre une fenêtre avec l'élection, le territoire, le nombre de votants (et la participation) et celui des blancs. Avant 2017, le fichier source ne distingue pas les blancs des nuls : la fenêtre indique alors « Blancs et nuls ».
 
 Quand on change de niveau, la sélection suit : en passant à un niveau supérieur (par exemple d'une commune à son département), le territoire parent est sélectionné et la carte zoome dessus ; en passant à un niveau inférieur, le territoire reste affiché dans la fiche et la carte zoome sur son emprise pour montrer ses subdivisions. « Pays » revient à la vue d'ensemble à chaque clic.
 

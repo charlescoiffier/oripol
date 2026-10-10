@@ -11,6 +11,10 @@ export interface SeriesPoint {
 	/** Blancs + nuls rapportés aux inscrits (avant 2014 les blancs sont comptés dans les nuls). */
 	blancsNuls: number | null;
 	precision: Precision;
+	inscrits: number;
+	votants: number;
+	blancs: number;
+	nuls: number;
 }
 
 export function buildSeries(
@@ -34,7 +38,11 @@ export function buildSeries(
 				shares: familyShares(r, e.lists, c),
 				abstention: r.inscrits > 0 ? 1 - r.votants / r.inscrits : null,
 				blancsNuls: r.inscrits > 0 ? (r.blancs + r.nuls) / r.inscrits : null,
-				precision: r.precision
+				precision: r.precision,
+				inscrits: r.inscrits,
+				votants: r.votants,
+				blancs: r.blancs,
+				nuls: r.nuls
 			};
 		});
 }

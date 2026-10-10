@@ -5,7 +5,7 @@
 	import { app } from '../lib/app-state.svelte';
 	import { NO_DATA_COLOR, SCORE_DOMAIN, scoreColor } from '../lib/color';
 	import { loadDataset, type Dataset } from '../lib/data';
-	import { defaultElection, groupByType, siblings } from '../lib/elections';
+	import { defaultElection, electionForType, groupByType, shortLabel, siblings } from '../lib/elections';
 	import { score } from '../lib/score';
 	import { buildSeries } from '../lib/series';
 	import { planLevelChange } from '../lib/hierarchy';
@@ -80,6 +80,12 @@
 
 	const election = $derived(app.election ? (loaded[app.election] ?? null) : null);
 	const electionGroups = $derived(dataset ? groupByType(dataset.index) : []);
+	const currentType = $derived(dataset?.index.find((e) => e.id === app.election)?.type ?? null);
+	const currentEntries = $derived(electionGroups.find((g) => g.type === currentType)?.entries ?? []);
+
+	function changeType(type: string) {
+		if (dataset) app.election = electionForType(dataset.index, type, app.election);
+	}
 	const electionLists = $derived(
 		app.election && dataset
 			? Object.fromEntries(Object.entries(dataset.lists).filter(([id]) => id.startsWith(`${app.election}.`)))
@@ -197,14 +203,19 @@
 				</header>
 
 				<div class="field">
-					<label for="election" class="section-title first">Élection</label>
-					<select id="election" bind:value={app.election}>
+					<label for="election-type" class="section-title first">Type d'élection</label>
+					<select id="election-type" value={currentType} onchange={(e) => changeType(e.currentTarget.value)}>
 						{#each electionGroups as g (g.type)}
-							<optgroup label={g.label}>
-								{#each g.entries as e (e.id)}
-									<option value={e.id}>{e.label}</option>
-								{/each}
-							</optgroup>
+							<option value={g.type}>{g.label}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="field">
+					<label for="election" class="section-title">Élection</label>
+					<select id="election" bind:value={app.election}>
+						{#each currentEntries as e (e.id)}
+							<option value={e.id}>{shortLabel(e)}</option>
 						{/each}
 					</select>
 				</div>
@@ -273,7 +284,7 @@
 					</header>
 				{/if}
 				{#if territoryName}
-					<TerritoryPanel {points} families={dataset.families} />
+					<TerritoryPanel {points} families={dataset.families} territoryName={territoryName ?? ''} />
 				{:else}
 					<p class="hint">Cliquez sur la carte ou recherchez un territoire pour voir son évolution.</p>
 					<button class="btn" type="button" onclick={() => select('FR')}>Voir la France</button>

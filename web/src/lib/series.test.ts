@@ -53,6 +53,14 @@ describe('buildSeries', () => {
 		expect(buildSeries(all, 'pres', 1, 'DEP-69', families, NO_OVERRIDES).map((p) => p.year)).toEqual([2002, 2012]);
 	});
 
+	it('keeps the raw counts needed by the hover details', () => {
+		const e = mk('pres-2002-1', 2002, {
+			'DEP-69': { ...withIds('pres-2002-1', res(30, 70)), blancs: 7, nuls: 3 }
+		});
+		const [p] = buildSeries([e], 'pres', 1, 'DEP-69', families, NO_OVERRIDES);
+		expect([p.inscrits, p.votants, p.blancs, p.nuls]).toEqual([200, 100, 7, 3]);
+	});
+
 	it('computes abstention from inscrits and votants', () => {
 		const s = buildSeries(elections, 'pres', 1, 'DEP-69', families, NO_OVERRIDES);
 		expect(s[0].abstention).toBeCloseTo(0.5);

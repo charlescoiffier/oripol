@@ -52,3 +52,21 @@ export function defaultElection(index: IndexEntry[]): string | null {
 	const firstRounds = first?.entries.filter((e) => e.round === 1) ?? [];
 	return firstRounds.at(-1)?.id ?? first?.entries.at(-1)?.id ?? null;
 }
+
+/** Élection ouverte quand on choisit un type : son dernier 1er tour (à défaut, sa dernière élection). */
+export function defaultElectionOfType(index: IndexEntry[], type: string): string | null {
+	const entries = groupByType(index).find((g) => g.type === type)?.entries ?? [];
+	return entries.filter((e) => e.round === 1).at(-1)?.id ?? entries.at(-1)?.id ?? null;
+}
+
+/** Libellé sans le type (« 2022 – 1er tour ») : le type est choisi dans un menu séparé. */
+export function shortLabel(e: IndexEntry): string {
+	return `${e.year} – ${e.round === 1 ? '1er' : '2d'} tour`;
+}
+
+/** Élection à ouvrir quand on change de type : même année et même tour si possible, sinon la plus récente. */
+export function electionForType(index: IndexEntry[], type: string, currentId: string | null): string | null {
+	const current = index.find((e) => e.id === currentId);
+	const same = current && index.find((e) => e.type === type && e.year === current.year && e.round === current.round);
+	return same?.id ?? defaultElectionOfType(index, type);
+}
