@@ -15,7 +15,7 @@ elections:
     - {key: URGENCE ECOLOGIE, label: "Urgence écologie (D. Bourg)", family: divers}
     - {key: ENSEMBLE POUR LE FREXIT, label: "Ensemble pour le Frexit (UPR, F. Asselineau)", family: divers}
     - {key: LUTTE OUVRIERE, label: "Lutte ouvrière (N. Arthaud)", family: extreme_gauche}
-    - {key: ENSEMBLE PATRIOTES, label: "Ensemble Patriotes (Les Patriotes, F. Philippot)", family: extreme_droite, to_validate: true}
+    - {key: ENSEMBLE PATRIOTES, label: "Ensemble Patriotes (Les Patriotes, F. Philippot)", family: extreme_droite}
     - {key: ALLIANCE JAUNE, label: "Alliance jaune (gilets jaunes)", family: divers}
     - {key: LES OUBLIES DE L'EUROPE, label: "Les oubliés de l'Europe", family: divers}
     - {key: PARTI PIRATE, label: "Parti pirate", family: divers}
@@ -23,15 +23,15 @@ elections:
     - {key: ESPERANTO, label: "Espéranto", family: divers}
     - {key: PARTI FED. EUROPEEN, label: "Parti fédéraliste européen", family: divers}
     - {key: DECROISSANCE 2019, label: "Décroissance 2019", family: divers}
-    - {key: ALLONS ENFANTS, label: "Allons enfants (S. Caillaud)", family: divers, to_validate: true}
+    - {key: ALLONS ENFANTS, label: "Allons enfants (S. Caillaud)", family: divers}
     - {key: A VOIX EGALES, label: "À voix égales", family: divers}
     - {key: PACE, label: "PACE", family: divers}
     - {key: INITIATIVE CITOYENNE, label: "Initiative citoyenne", family: divers}
     - {key: UDLEF, label: "UDLEF", family: divers}
-    - {key: LISTE DE LA RECONQUETE, label: "Liste de la reconquête (V. Vauclin)", family: extreme_droite, to_validate: true}
-    - {key: UNE FRANCE ROYALE, label: "Une France royale", family: extreme_droite, to_validate: true}
+    - {key: LISTE DE LA RECONQUETE, label: "Liste de la reconquête (V. Vauclin)", family: extreme_droite}
+    - {key: UNE FRANCE ROYALE, label: "Une France royale", family: extreme_droite}
     - {key: DEMOCRATIE REPRESENTATIVE, label: "Démocratie représentative", family: divers}
     - {key: EVOLUTION CITOYENNE, label: "Évolution citoyenne", family: divers}
-    - {key: LA LIGNE CLAIRE, label: "La ligne claire (R. Camus)", family: extreme_droite, to_validate: true}
+    - {key: LA LIGNE CLAIRE, label: "La ligne claire (R. Camus)", family: extreme_droite}
     - {key: REVOLUTIONNAIRE, label: "Révolutionnaire (communistes révolutionnaires)", family: extreme_gauche}
     - {key: NEUTRE ET ACTIF, label: "Neutre et actif", family: divers}

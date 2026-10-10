@@ -12,7 +12,7 @@ nuances:
   CPNT: {label: "Chasse, pêche, nature et traditions", family: divers}
   DIV: {label: "Divers", family: divers}
   DL: {label: "Démocratie libérale", family: droite}
-  DLF: {label: "Debout la France", family: extreme_droite, to_validate: true}
+  DLF: {label: "Debout la France", family: extreme_droite}
   DSV: {label: "Droite souverainiste", family: droite}
   DTE: {label: "Liste de droite (RPR-DL)", family: droite}
   DVC: {label: "Divers centre", family: centre}
@@ -32,15 +32,15 @@ nuances:
   GJ: {label: "Gilets jaunes", family: divers}
   HOR: {label: "Horizons", family: centre}
   LAUT: {label: "Liste autres", family: divers}
-  LCMD: {label: "Liste MoDem (centre)", family: centre, to_validate: true}
+  LCMD: {label: "Liste MoDem (centre)", family: centre}
   LCOM: {label: "Liste Parti communiste / Gauche unie", family: gauche}
-  LCOP: {label: "Liste Front de gauche / communiste (2009-2010)", family: gauche, to_validate: true}
-  LCP: {label: "Liste chasse et pêche (2004)", family: divers, to_validate: true}
+  LCOP: {label: "Liste Front de gauche / communiste (2009-2010)", family: gauche}
+  LCP: {label: "Liste chasse et pêche (2004)", family: divers}
   LCR: {label: "Ligue communiste révolutionnaire", family: extreme_gauche}
-  LDD: {label: "Liste divers droite (2004)", family: droite, to_validate: true}
+  LDD: {label: "Liste divers droite (2004)", family: droite}
   LDG: {label: "Liste divers gauche (2004)", family: gauche}
   LDIV: {label: "Liste divers", family: divers}
-  LDLF: {label: "Liste Debout la France", family: extreme_droite, to_validate: true}
+  LDLF: {label: "Liste Debout la France", family: extreme_droite}
   LDR: {label: "Liste d'union de la droite (2004)", family: droite}
   LDSV: {label: "Liste droite souverainiste", family: droite}
   LDV: {label: "Liste divers (2004-2009)", family: divers}
@@ -71,20 +71,20 @@ nuances:
   LRN: {label: "Liste Rassemblement national", family: extreme_droite}
   LSOC: {label: "Liste Parti socialiste", family: gauche}
   LUC: {label: "Liste d'union du centre", family: centre}
-  LUCD: {label: "Liste union du centre et de la droite", family: droite, to_validate: true}
+  LUCD: {label: "Liste union du centre et de la droite", family: droite}
   LUD: {label: "Liste d'union de la droite", family: droite}
   LUDF: {label: "Liste UDF", family: centre}
   LUDI: {label: "Liste UDI", family: centre}
   LUG: {label: "Liste d'union de la gauche", family: gauche}
   LUGE: {label: "Liste union gauche et écologistes", family: gauche}
   LUMP: {label: "Liste UMP", family: droite}
-  LVE: {label: "Liste Les Verts (2004)", family: gauche, to_validate: true}
+  LVE: {label: "Liste Les Verts (2004)", family: gauchee}
   LVEC: {label: "Liste Verts / Écologistes", family: gauche}
-  LVEG: {label: "Liste Verts / écologistes (2015)", family: gauche, to_validate: true}
+  LVEG: {label: "Liste Verts / écologistes (2015)", family: gauche}
   LXD: {label: "Liste extrême droite (2004)", family: extreme_droite}
   LXG: {label: "Liste extrême gauche", family: extreme_gauche}
   M: {label: "Majorité présidentielle", family: droite}
-  "M-NC": {label: "Majorité présidentielle - Nouveau Centre", family: centre, to_validate: true}
+  "M-NC": {label: "Majorité présidentielle - Nouveau Centre", family: centre}
   MAJ: {label: "Majorité présidentielle", family: droite}
   MDC: {label: "Mouvement des citoyens", family: gauche}
   MDM: {label: "MoDem", family: centre}
@@ -95,7 +95,7 @@ nuances:
   NCE: {label: "Nouveau Centre", family: centre}
   NUP: {label: "Nouvelle union populaire (NUPES)", family: gauche}
   PG: {label: "Parti de gauche", family: gauche}
-  PREP: {label: "Pôle républicain (code PREP)", family: gauche, to_validate: true}
+  PREP: {label: "Pôle républicain (code PREP)", family: gauche}
   PRG: {label: "Parti radical de gauche", family: gauche}
   PRV: {label: "Parti radical valoisien", family: centre}
   RDG: {label: "Radicaux de gauche", family: gauche}
@@ -107,8 +107,8 @@ nuances:
   RPR: {label: "Rassemblement pour la République", family: droite}
   SOC: {label: "Parti socialiste", family: gauche}
   UC: {label: "Union du centre", family: centre}
-  UCD: {label: "Union du centre et de la droite", family: droite, to_validate: true}
-  UCG: {label: "Union du centre et de la gauche", family: gauche, to_validate: true}
+  UCD: {label: "Union du centre et de la droite", family: droite}
+  UCG: {label: "Union du centre et de la gauche", family: gauche}
   UD: {label: "Union de la droite", family: droite}
   UDF: {label: "Union pour la démocratie française", family: centre}
   UDFD: {label: "UDF-Démocrates", family: centre}
