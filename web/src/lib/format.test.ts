@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { classifiedLine, formatCount, formatPercent, orientationLabel, pointDetails, statusLine } from './format';
+import { classifiedLine, evolutionTitle, formatCount, formatPercent, orientationLabel, pointDetails, statusLine } from './format';
 import type { SeriesPoint } from './series';
+
+describe('evolutionTitle', () => {
+	it('names the kind of election, in lower case', () => {
+		expect(evolutionTitle('Présidentielles')).toBe("Évolution de l'orientation des votes lors des dernières élections présidentielles");
+		expect(evolutionTitle('Départementales (et Cantonales)')).toBe(
+			"Évolution de l'orientation des votes lors des dernières élections départementales (et cantonales)"
+		);
+	});
+	it('stays generic without a type', () => {
+		expect(evolutionTitle('')).toBe("Évolution de l'orientation des votes");
+	});
+});
 
 const flat = (s: string) => s.replace(/[  ]/g, ' ');
 

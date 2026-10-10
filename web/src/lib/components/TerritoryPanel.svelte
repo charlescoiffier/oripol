@@ -4,13 +4,18 @@
 	import { GridComponent, MarkLineComponent, TooltipComponent } from 'echarts/components';
 	import { CanvasRenderer } from 'echarts/renderers';
 	import { onMount } from 'svelte';
-	import { classifiedLine, formatPercent, orientationLabel, pointDetails, statusLine } from '../format';
+	import { classifiedLine, evolutionTitle, formatPercent, orientationLabel, pointDetails, statusLine } from '../format';
 	import type { SeriesPoint } from '../series';
 	import type { Family } from '../types';
 
 	echarts.use([LineChart, BarChart, ScatterChart, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
 
-	let { points, families, territoryName }: { points: SeriesPoint[]; families: Family[]; territoryName: string } = $props();
+	let {
+		points,
+		families,
+		territoryName,
+		typeLabel = ''
+	}: { points: SeriesPoint[]; families: Family[]; territoryName: string; typeLabel?: string } = $props();
 
 	let orientationEl: HTMLDivElement;
 	let sharesEl: HTMLDivElement;
@@ -233,7 +238,7 @@
 		<p class="empty">Pas de données pour ce territoire.</p>
 	{/if}
 
-	<h3 class="section-title">Évolution de l'orientation des votes</h3>
+	<h3 class="section-title">{evolutionTitle(typeLabel)}</h3>
 	<div bind:this={orientationEl} class="chart orientation"></div>
 	<div class="sides"><span>← Gauche</span><span>Droite →</span></div>
 	{#if hasAbsent || hasUnscored}

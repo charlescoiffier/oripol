@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { levelForId, searchTerritories } from './search';
+import { displayName, levelForId, searchTerritories } from './search';
 
 const names: Record<string, string> = {
 	FR: 'France',
@@ -30,9 +30,13 @@ describe('searchTerritories', () => {
 
 	it('labels the level and gives the department for communes', () => {
 		const [lyon] = searchTerritories(names, 'lyon');
-		expect(lyon).toMatchObject({ id: 'COM-69123', label: 'Lyon', kind: 'Commune', hint: '69' });
+		expect(lyon).toMatchObject({ id: 'COM-69123', label: 'Lyon (69)', kind: 'Commune' });
 		const [abymes] = searchTerritories(names, 'abymes');
-		expect(abymes.hint).toBe('971');
+		expect(abymes.label).toBe('Les Abymes (971)');
+	});
+
+	it('does not change the labels of other levels', () => {
+		expect(searchTerritories(names, 'rhône')[0].label).toBe('Rhône');
 	});
 
 	it('limits the number of results', () => {
@@ -41,6 +45,16 @@ describe('searchTerritories', () => {
 
 	it('finds the abroad territory', () => {
 		expect(searchTerritories(names, 'etablis')[0].id).toBe('DEP-ZZ');
+	});
+});
+
+describe('displayName', () => {
+	it('adds the department number after the name of a commune only', () => {
+		expect(displayName('COM-69123', 'Lyon')).toBe('Lyon (69)');
+		expect(displayName('COM-2A004', 'Ajaccio')).toBe('Ajaccio (2A)');
+		expect(displayName('COM-97101', 'Les Abymes')).toBe('Les Abymes (971)');
+		expect(displayName('DEP-69', 'Rhône')).toBe('Rhône');
+		expect(displayName('FR', 'France')).toBe('France');
 	});
 });
 

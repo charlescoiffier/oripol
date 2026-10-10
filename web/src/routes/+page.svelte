@@ -6,13 +6,14 @@
 	import { NO_DATA_COLOR, SCORE_DOMAIN, scoreColor } from '../lib/color';
 	import { loadDataset, namesFor, type Dataset, type PeopleData } from '../lib/data';
 	import { defaultElection, electionForType, groupByType, menuType, shortLabel, siblings } from '../lib/elections';
+	import { evolutionTitle } from '../lib/format';
 	import { composeA4, composePng, fileName, imageBlock, resultsBlock, savePdf, savePng, type Legend } from '../lib/export';
 	import { leader, resultRows } from '../lib/leader';
 	import { applyPalette, scoreEnds } from '../lib/palette';
 	import { score } from '../lib/score';
 	import { buildSeries } from '../lib/series';
 	import { planLevelChange } from '../lib/hierarchy';
-	import { levelForId } from '../lib/search';
+	import { displayName, levelForId } from '../lib/search';
 	import { decodeState, encodeState, type Mode } from '../lib/url-state';
 	import AboutModal from '../lib/components/AboutModal.svelte';
 	import ExportDialog from '../lib/components/ExportDialog.svelte';
@@ -178,6 +179,7 @@
 			? buildSeries(siblings(dataset.index, app.election), loaded, app.territory, dataset.families, app.classification)
 			: []
 	);
+	const typeLabel = $derived(electionGroups.find((g) => g.type === currentType)?.label ?? '');
 	const peopleData = $derived(app.election ? peopleByElection[app.election] : undefined);
 	const territoryPeople = $derived(peopleData && app.territory ? namesFor(peopleData, app.territory) : undefined);
 	const territoryEntries = $derived(peopleData && app.territory ? peopleData.lists[app.territory] : undefined);
@@ -186,7 +188,9 @@
 	const legendFamilies = $derived(families.filter((f) => f.inBase !== false));
 	const ends = $derived(scoreEnds(app.palette));
 
-	const territoryName = $derived(app.territory ? (dataset?.names[app.territory] ?? app.territory) : null);
+	const territoryName = $derived(
+		app.territory ? displayName(app.territory, dataset?.names[app.territory] ?? app.territory) : null
+	);
 	const territoryKind = $derived(
 		app.territory ? KINDS[app.territory === 'FR' ? 'FR' : app.territory.split('-')[0]] : ''
 	);
@@ -294,7 +298,7 @@
 				}
 				if (app.mode === 'evolution') {
 					const snap = panelRef?.snapshot();
-					if (snap && ids.includes('orientation')) blocks.push(await imageBlock('Évolution de l’orientation des votes', snap.orientation, [], { cssWidth: snap.orientationWidth }));
+					if (snap && ids.includes('orientation')) blocks.push(await imageBlock(evolutionTitle(typeLabel), snap.orientation, [], { cssWidth: snap.orientationWidth }));
 					if (snap && ids.includes('shares')) blocks.push(await imageBlock('Répartition des votes', snap.shares, snap.legend));
 				}
 			}
@@ -467,7 +471,7 @@
 				{#if territoryName && app.mode === 'classique'}
 					<ResultsPanel {electionLabel} people={territoryPeople} entries={territoryEntries} result={currentResult} lists={election?.lists ?? {}} {families} classification={app.classification} />
 				{:else if territoryName}
-					<TerritoryPanel bind:this={panelRef} {points} {families} territoryName={territoryName ?? ''} />
+					<TerritoryPanel bind:this={panelRef} {points} {families} {typeLabel} territoryName={territoryName ?? ''} />
 				{:else}
 					<p class="hint">Cliquez sur la carte ou recherchez un territoire pour voir {app.mode === 'classique' ? 'ses résultats' : 'son évolution'}.</p>
 					<button class="btn" type="button" onclick={() => select('FR')}>Voir la France</button>

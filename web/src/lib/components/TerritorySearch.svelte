@@ -64,7 +64,7 @@
 						onclick={() => choose(h.id)}
 					>
 						<span class="label">{h.label}</span>
-						<span class="kind">{h.kind}{h.hint ? ` · ${h.hint}` : ''}</span>
+						<span class="kind">{h.kind}</span>
 					</button>
 				</li>
 			{/each}

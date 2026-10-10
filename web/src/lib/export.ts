@@ -63,8 +63,14 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 function heading(ctx: CanvasRenderingContext2D, text: string, y: number): number {
 	ctx.fillStyle = MUTED;
-	ctx.font = `600 24px ${FONT}`;
 	ctx.textBaseline = 'top';
+	// titre long (« … lors des dernières élections … ») : on réduit la police plutôt que de le tronquer
+	let size = 24;
+	ctx.font = `600 ${size}px ${FONT}`;
+	while (size > 14 && ctx.measureText(text.toUpperCase()).width > BLOCK_WIDTH) {
+		size -= 1;
+		ctx.font = `600 ${size}px ${FONT}`;
+	}
 	ctx.fillText(text.toUpperCase(), 0, y);
 	return y + 40;
 }

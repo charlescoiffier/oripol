@@ -4,8 +4,6 @@ export interface Hit {
 	id: string;
 	label: string;
 	kind: 'Pays' | 'Région' | 'Département' | 'Commune';
-	/** Département d'une commune, pour distinguer les homonymes. */
-	hint: string;
 }
 
 const KINDS: [string, Hit['kind']][] = [
@@ -33,6 +31,11 @@ function departmentOf(id: string): string {
 	return /^(97|98)/.test(code) ? code.slice(0, 3) : code.slice(0, 2);
 }
 
+/** Nom affiché d'un territoire : une commune est suivie du numéro de son département, « Lyon (69) ». */
+export function displayName(id: string, name: string): string {
+	return id.startsWith('COM-') ? `${name} (${departmentOf(id)})` : name;
+}
+
 export function searchTerritories(names: Record<string, string>, query: string, limit = 30): Hit[] {
 	const q = normalize(query);
 	if (!q) return [];
@@ -46,9 +49,8 @@ export function searchTerritories(names: Record<string, string>, query: string, 
 		scored.push({
 			hit: {
 				id,
-				label,
-				kind: KINDS[level][1],
-				hint: KINDS[level][1] === 'Commune' ? departmentOf(id) : ''
+				label: displayName(id, label),
+				kind: KINDS[level][1]
 			},
 			starts: at === 0,
 			level

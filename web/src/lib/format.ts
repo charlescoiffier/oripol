@@ -35,6 +35,12 @@ export function classifiedLine(p: SeriesPoint): string | null {
 	return p.classified < 0.9995 ? `Voix avec étiquette politique : ${formatPercent(p.classified)}` : null;
 }
 
+/** Titre du graphique d'orientation : « … lors des dernières élections présidentielles ». */
+export function evolutionTitle(typeLabel: string): string {
+	const base = "Évolution de l'orientation des votes";
+	return typeLabel ? `${base} lors des dernières élections ${typeLabel.toLowerCase()}` : base;
+}
+
 /** Nuance d'orientation : gauche, centre gauche, centre, centre droit, droite. */
 export function orientationLabel(score: number): string {
 	if (score <= -0.6) return 'Gauche';
