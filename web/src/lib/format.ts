@@ -29,3 +29,8 @@ export function pointDetails(p: SeriesPoint): { votants: string; abstentions: st
 			: `Blancs : ${formatCount(p.blancs)}`;
 	return { votants, abstentions, blancs };
 }
+
+/** Ligne d'information sur les voix étiquetées, seulement quand une partie des voix ne l'est pas. */
+export function classifiedLine(p: SeriesPoint): string | null {
+	return p.classified < 0.9995 ? `Voix avec étiquette politique : ${formatPercent(p.classified)}` : null;
+}

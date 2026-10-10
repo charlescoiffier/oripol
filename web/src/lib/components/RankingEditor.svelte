@@ -4,6 +4,8 @@
 	import type { Family, ListInfo } from '../types';
 
 	let { families, lists }: { families: Family[]; lists: Record<string, ListInfo> } = $props();
+	// les voix non classées ne sont pas une position politique : pas de curseur
+	const adjustable = $derived(families.filter((f) => f.inBase !== false));
 </script>
 
 <section>
@@ -13,7 +15,7 @@
 	</div>
 
 	<div class="grid">
-		{#each families as f (f.id)}
+		{#each adjustable as f (f.id)}
 			{@const pos = positionOf(f, app.classification)}
 			<input
 				type="checkbox"

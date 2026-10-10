@@ -3,8 +3,9 @@
 # Nuances actuelles : blocs de la circulaire 2026 (EXG, GAU, CENT, DTE, EXD, DIV) ; codes historiques rattachés à la main.
 # Par cohérence avec la présidentielle, La France insoumise est rangée à gauche (le ministère la classe en EXG).
 # Le préfixe « BC- » des binômes départementaux est retiré à l'ingestion ; le préfixe « L » désigne une liste.
-applies_to: [legi-2002-1, legi-2002-2, legi-2007-1, legi-2007-2, legi-2012-1, legi-2012-2, legi-2017-1, legi-2017-2, legi-2022-1, legi-2022-2, legi-2024-1, legi-2024-2, euro-1999-1, euro-2004-1, euro-2009-1, euro-2014-1, euro-2024-1, regi-2004-1, regi-2004-2, regi-2010-1, regi-2010-2, regi-2015-1, regi-2015-2, regi-2021-1, regi-2021-2, dpmt-2015-1, dpmt-2015-2, dpmt-2021-1, dpmt-2021-2, cant-2001-1, cant-2001-2, cant-2004-1, cant-2004-2, cant-2008-1, cant-2008-2, cant-2011-1, cant-2011-2]
+applies_to: [legi-2002-1, legi-2002-2, legi-2007-1, legi-2007-2, legi-2012-1, legi-2012-2, legi-2017-1, legi-2017-2, legi-2022-1, legi-2022-2, legi-2024-1, legi-2024-2, euro-1999-1, euro-2004-1, euro-2009-1, euro-2014-1, euro-2024-1, regi-2004-1, regi-2004-2, regi-2010-1, regi-2010-2, regi-2015-1, regi-2015-2, regi-2021-1, regi-2021-2, dpmt-2015-1, dpmt-2015-2, dpmt-2021-1, dpmt-2021-2, cant-2001-1, cant-2001-2, cant-2004-1, cant-2004-2, cant-2008-1, cant-2008-2, cant-2011-1, cant-2011-2, muni-2008-1, muni-2008-2, muni-2014-1, muni-2014-2, muni-2020-1, muni-2020-2, muni-2026-1, muni-2026-2]
 nuances:
+  NC: {label: "Sans étiquette (non classé)", family: non_classe}
   ALLI: {label: "Alliance centriste", family: centre}
   AUT: {label: "Autres", family: divers}
   CEN: {label: "Centristes", family: centre}
@@ -118,3 +119,12 @@ nuances:
   UMP: {label: "Union pour un mouvement populaire", family: droite}
   UXD: {label: "Union de l'extrême droite", family: extreme_droite}
   VEC: {label: "Les Verts / Les Écologistes", family: gauche}
+  LGC: {label: "Liste gauche et centre (2008)", family: gauche, to_validate: true}
+  LGJ: {label: "Liste Gilets jaunes (2020)", family: divers}
+  LHOR: {label: "Liste Horizons", family: centre}
+  LMC: {label: "Liste majorité et centre (2008)", family: droite, to_validate: true}
+  LNC: {label: "Liste non classée", family: non_classe}
+  LPG: {label: "Liste Parti de gauche", family: gauche}
+  LREN: {label: "Liste Renaissance", family: centre}
+  LUDR: {label: "Liste Union des droites pour la République", family: extreme_droite}
+  LUXD: {label: "Liste Union de l'extrême droite", family: extreme_droite}

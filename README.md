@@ -18,13 +18,13 @@ Aucun compte, aucun serveur applicatif : le site est statique et tout le calcul 
 
 ## Le projet en bref
 
-Oripol colore une carte de France selon l'orientation du vote (de la gauche à la droite) pour chaque élection, et trace l'évolution d'un territoire dans le temps. Cette version couvre les présidentielles (2002-2022), les législatives (2002-2024), les européennes (1999-2024), les régionales (2004-2021), les départementales (2015-2021) et les cantonales (2001-2011), 1er et 2d tours quand il y en a, pour **les 35 000 communes**, les départements, les régions, l'outre-mer et les Français établis hors de France.
+Oripol colore une carte de France selon l'orientation du vote (de la gauche à la droite) pour chaque élection, et trace l'évolution d'un territoire dans le temps. Cette version couvre les présidentielles (2002-2022), les législatives (2002-2024), les européennes (1999-2024), les régionales (2004-2021), les départementales (2015-2021), les cantonales (2001-2011) et les municipales (2008-2026), 1er et 2d tours quand il y en a, pour **les 35 000 communes**, les départements, les régions, l'outre-mer et les Français établis hors de France.
 
 Le classement des candidats par famille politique est proposé par défaut, mais chacun peut le modifier.
 
 ## Utiliser la carte
 
-1. Choisir un **type d'élection** (présidentielles, législatives, européennes, départementales, cantonales, régionales), puis l'**élection** précise dans le second menu, dans le panneau de gauche. Changer de type garde la même année quand elle existe.
+1. Choisir un **type d'élection** (présidentielles, législatives, européennes, municipales, départementales, cantonales, régionales), puis l'**élection** précise dans le second menu, dans le panneau de gauche. Changer de type garde la même année quand elle existe.
 2. Choisir un **niveau** : Pays, Régions, Départements ou Communes. Au niveau Communes, il faut zoomer pour distinguer les communes.
 3. Cliquer sur un territoire (il est entouré d'un trait fin), ou le chercher dans la barre « Choix du territoire » du panneau de droite : la liste se réduit pendant la frappe. Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus. Un double clic sur un territoire zoome sur son emprise.
 4. Lire sa fiche : **évolution de l'orientation du vote** depuis 2002, puis **répartition des votes** par famille, avec l'abstention. Passer la souris sur une année ouvre une fenêtre avec l'élection, le territoire, le nombre de votants (et la participation), celui des abstentions et celui des blancs. Avant 2017, le fichier source ne distingue pas les blancs des nuls : la fenêtre indique alors « Blancs et nuls ».
@@ -59,7 +59,8 @@ La carte et les courbes se recalculent aussitôt. L'adresse de la page conserve 
 - Un territoire sans donnée apparaît en gris, jamais comme « centre ».
 - Les tendances dépendent beaucoup du classement : avec les choix par défaut (La France insoumise à gauche, Emmanuel Macron au centre), la droite et l'extrême droite semblent progresser de 2002 à 2022. Rattacher ces candidats autrement change nettement la courbe.
 - Le jeu source est incomplet pour deux scrutins : en 2002 il omet Mayotte, les collectivités d'outre-mer et les Français de l'étranger ; en 2007, les collectivités d'outre-mer et les Français de l'étranger. Le total « Pays » de ces deux années est donc un peu inférieur au résultat officiel.
-- Pas encore de municipales. Au 2d tour, seules les communes concernées par un second tour ont des résultats ; cantonales et départementales ne renouvellent qu'une partie des cantons à chaque scrutin, le reste de la carte est en gris.
+- **Municipales** : seules les communes d'une certaine taille ont des nuances politiques (environ 3 500 habitants et plus en 2008 et 2026, environ 1 000 et plus en 2014 et 2020). Les autres voix sont « Non classé », hors du calcul de l'orientation, qui n'est faite que si au moins la moitié des voix sont étiquetées ; les petites communes sont donc en gris, et les totaux départementaux et nationaux reflètent surtout les communes étiquetées. Dans la fenêtre au survol, une ligne indique la part de voix étiquetées.
+- Au 2d tour, seules les communes concernées par un second tour ont des résultats ; cantonales et départementales ne renouvellent qu'une partie des cantons à chaque scrutin, le reste de la carte est en gris.
 
 ---
 
@@ -74,7 +75,7 @@ Prérequis : [uv](https://docs.astral.sh/uv/), Node.js et [tippecanoe](https://g
 ./build-data.sh   # (re)génère seulement les données : ~240 Mo téléchargés la première fois
 ```
 
-Les résultats de chaque élection ne sont chargés qu'à la demande (environ 2 Mo chacune, une centaine de Mo pour les 48 élections). Les données générées (`web/static/data/`) et les sources téléchargées (`etl/data/`) ne sont pas versionnées : tout ce qui peut être régénéré est exclu du dépôt.
+Les résultats de chaque élection ne sont chargés qu'à la demande (environ 2 Mo chacune, une centaine de Mo pour les 56 élections). Les données générées (`web/static/data/`) et les sources téléchargées (`etl/data/`) ne sont pas versionnées : tout ce qui peut être régénéré est exclu du dépôt.
 
 Avec Node 23.5, `npm install` doit recevoir `--engine-strict=false` (c'est ce que fait `start.sh`).
 

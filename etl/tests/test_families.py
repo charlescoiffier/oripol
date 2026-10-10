@@ -5,7 +5,7 @@ import pytest
 from oripol_etl.families import load_all_mappings, load_families, load_list_mappings, normalize_key
 
 MAPPINGS = Path(__file__).resolve().parents[1] / "mappings"
-FAMILY_IDS = {"extreme_gauche", "gauche", "centre", "droite", "extreme_droite", "divers", "regionaliste"}
+FAMILY_IDS = {"extreme_gauche", "gauche", "centre", "droite", "extreme_droite", "divers", "regionaliste", "non_classe"}
 
 
 def real_mappings():
@@ -33,7 +33,8 @@ def test_real_mappings_cover_all_supported_elections():
     regi = {f"regi-{y}-{r}" for y in (2004, 2010, 2015, 2021) for r in (1, 2)}
     dpmt = {f"dpmt-{y}-{r}" for y in (2015, 2021) for r in (1, 2)}
     cant = {f"cant-{y}-{r}" for y in (2001, 2004, 2008, 2011) for r in (1, 2)}
-    assert set(m) == pres | legi | euro | regi | dpmt | cant
+    muni = {f"muni-{y}-{r}" for y in (2008, 2014, 2020, 2026) for r in (1, 2)}
+    assert set(m) == pres | legi | euro | regi | dpmt | cant | muni
     for election, lists in m.items():
         for key, mapping in lists.items():
             assert mapping.family in FAMILY_IDS, (election, key)
@@ -85,3 +86,10 @@ def test_nuance_codes_with_a_hyphen_keep_it():
     m = real_mappings()
     assert "M-NC" in m["cant-2008-1"]  # code de nuance : pas de normalisation de nom
     assert m["cant-2008-1"]["M-NC"].family == "centre"
+
+
+def test_non_classe_family_is_outside_the_political_base():
+    families = {f.id: f for f in load_families(MAPPINGS / "families.yaml")}
+    assert families["non_classe"].in_base is False
+    assert families["gauche"].in_base is True
+    assert real_mappings()["muni-2020-1"]["NC"].family == "non_classe"

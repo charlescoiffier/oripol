@@ -8,7 +8,7 @@ from .cog import build_resolver
 from .export import write_parents, write_site_data
 from .families import load_all_mappings, load_families
 from .geo import build_geo
-from .ministry import to_commune_tables
+from .ministry import reconcile_unclassified, to_commune_tables
 from .validate import validate, validate_coverage
 
 
@@ -30,6 +30,7 @@ def run() -> None:
     families = load_families(c.FAMILIES)
     mappings = load_all_mappings(c.MAPPINGS, {f.id for f in families})
     participation, votes = to_commune_tables(_table(c.GENERAL_FILE), _table(c.CANDIDATES_FILE), c.COLUMNS, resolver)
+    votes = reconcile_unclassified(participation, votes, types={"muni"})
     geo = build_geo(communes, comer_communes, participation["code"].unique().to_list())
 
     validate_coverage(participation, set(geo["code"].to_list()))  # lève si de vraies communes ne se résolvent pas

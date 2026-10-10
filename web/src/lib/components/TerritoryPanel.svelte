@@ -4,7 +4,7 @@
 	import { GridComponent, MarkLineComponent, TooltipComponent } from 'echarts/components';
 	import { CanvasRenderer } from 'echarts/renderers';
 	import { onMount } from 'svelte';
-	import { formatPercent, pointDetails } from '../format';
+	import { classifiedLine, formatPercent, pointDetails } from '../format';
 	import type { SeriesPoint } from '../series';
 	import type { Family } from '../types';
 
@@ -35,7 +35,9 @@
 		return (
 			`<div style="font-weight:600">${esc(p.label)}</div>` +
 			`<div>${esc(territoryName)}</div>` +
-			`<div style="color:#666;margin:4px 0 6px">${esc(d.votants)}<br/>${esc(d.abstentions)}<br/>${esc(d.blancs)}</div>`
+			`<div style="color:#666;margin:4px 0 6px">${esc(d.votants)}<br/>${esc(d.abstentions)}<br/>${esc(d.blancs)}` +
+			(classifiedLine(p) ? `<br/>${esc(classifiedLine(p) as string)}` : '') +
+			`</div>`
 		);
 	}
 
@@ -74,7 +76,11 @@
 						const p = points[params[0].dataIndex];
 						return (
 							tooltipHeader(p) +
-							(p.score === null ? 'Orientation : pas de donnée' : `Orientation : ${wording(p.score)}`)
+							(p.score === null
+								? p.classified < 1
+									? 'Orientation non calculée (trop peu de voix étiquetées)'
+									: 'Orientation : pas de donnée'
+								: `Orientation : ${wording(p.score)}`)
 						);
 					}
 				},

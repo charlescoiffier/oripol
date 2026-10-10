@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCount, formatPercent, pointDetails } from './format';
+import { classifiedLine, formatCount, formatPercent, pointDetails } from './format';
 import type { SeriesPoint } from './series';
 
 const flat = (s: string) => s.replace(/[  ]/g, ' ');
@@ -17,6 +17,7 @@ const point = (over: Partial<SeriesPoint> = {}): SeriesPoint => ({
 	votants: 800,
 	blancs: 16,
 	nuls: 4,
+	classified: 1,
 	...over
 });
 
@@ -30,6 +31,15 @@ describe('formatCount', () => {
 describe('formatPercent', () => {
 	it('uses a decimal comma', () => {
 		expect(flat(formatPercent(0.1843))).toBe('18,4 %');
+	});
+});
+
+describe('classifiedLine', () => {
+	it('is absent when every vote is classified', () => {
+		expect(classifiedLine(point())).toBeNull();
+	});
+	it('tells how many votes carry a political label otherwise', () => {
+		expect(flat(classifiedLine(point({ classified: 0.38 })) ?? '')).toBe('Voix avec étiquette politique : 38,0 %');
 	});
 });
 

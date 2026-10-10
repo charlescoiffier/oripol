@@ -30,7 +30,8 @@ def test_election_id_from_source():
     assert election_id_from_source("2021_regi_t2") == "regi-2021-2"
     assert election_id_from_source("2015_dpmt_t1") == "dpmt-2015-1"
     assert election_id_from_source("2008_cant_t2") == "cant-2008-2"
-    assert election_id_from_source("2020_muni_t1") is None  # municipales : pas encore pris en charge
+    assert election_id_from_source("2020_muni_t1") == "muni-2020-1"
+    assert election_id_from_source("2020_xxxx_t1") is None
 
 
 def general():
@@ -159,3 +160,45 @@ def test_lists_without_nuance_are_keyed_by_their_normalised_short_label():
     )
     _, votes = to_commune_tables(_simple_general("2019_euro_t1"), candidates, CM, CommuneResolver({}, {"22222"}))
     assert sorted(votes["list_key"].to_list()) == ["EUROPE ECOLOGIE", "UNION DROITE CENTRE"]
+
+
+def test_municipal_lists_without_nuance_are_not_classified_even_when_they_have_a_label():
+    candidates = pl.DataFrame(
+        {
+            "id_election": ["2020_muni_t1"] * 2,
+            "bv": ["b1", "b2"],
+            "nom": [None, None],
+            "nuance": [None, "LDVD"],
+            "libelle_abrege_liste": ["UN VILLAGE ENSEMBLE", "AUTRE LISTE"],
+            "voix": [40, 30],
+        }
+    )
+    _, votes = to_commune_tables(_simple_general("2020_muni_t1"), candidates, CM, CommuneResolver({}, {"22222"}))
+    assert sorted(votes["list_key"].to_list()) == ["LDVD", "NC"]  # pas de repli sur le libellé hors européennes
+
+
+def test_unclassified_votes_are_reconciled_to_the_remaining_expressed_votes():
+    from oripol_etl.ministry import reconcile_unclassified
+
+    part = pl.DataFrame(
+        {
+            "election_id": ["muni-2020-1"] * 4 + ["legi-2022-1"],
+            "code": ["A", "B", "C", "D", "A"],
+            "exprimes": [100, 100, 100, 100, 100],
+        }
+    )
+    votes = pl.DataFrame(
+        {
+            "election_id": ["muni-2020-1"] * 5 + ["legi-2022-1"],
+            "code": ["A", "B", "B", "C", "D", "A"],
+            "list_key": ["NC", "LDVD", "NC", "LDVG", "NC", "NC"],
+            "voix": [300, 60, 50, 70, 100, 500],  # A : vote plurinominal (300 > 100)
+        }
+    )
+    out = reconcile_unclassified(part, votes, types={"muni"}).sort(["election_id", "code", "list_key"])
+    nc = {(r["election_id"], r["code"]): r["voix"] for r in out.filter(pl.col("list_key") == "NC").iter_rows(named=True)}
+    assert nc[("muni-2020-1", "A")] == 100  # plurinominal : tout est non classé
+    assert nc[("muni-2020-1", "B")] == 40  # 100 exprimés - 60 classés
+    assert nc[("muni-2020-1", "C")] == 30  # ligne NC créée pour le reste
+    assert nc[("muni-2020-1", "D")] == 100
+    assert nc[("legi-2022-1", "A")] == 500  # autres scrutins : inchangés

@@ -5,7 +5,8 @@ export type FamilyId =
 	| 'droite'
 	| 'extreme_droite'
 	| 'divers'
-	| 'regionaliste';
+	| 'regionaliste'
+	| 'non_classe';
 
 export type Precision = 'commune' | 'circonscription' | 'canton' | 'departement';
 export type Level = 'pays' | 'regions' | 'departements' | 'communes';
@@ -15,6 +16,8 @@ export interface Family {
 	label: string;
 	position: number | null;
 	color: string;
+	/** false : voix hors de la base du score (listes sans étiquette) ; absent = true. */
+	inBase?: boolean;
 }
 
 export interface ListInfo {

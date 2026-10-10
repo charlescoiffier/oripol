@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NO_OVERRIDES, familyShares, score } from './score';
+import { MIN_CLASSIFIED, NO_OVERRIDES, classifiedShare, familyShares, score } from './score';
 import type { Family, ListInfo, TerritoryResult } from './types';
 
 const families: Family[] = [
@@ -9,12 +9,14 @@ const families: Family[] = [
 	{ id: 'droite', label: 'D', position: 1, color: '#000' },
 	{ id: 'extreme_droite', label: 'ED', position: 2, color: '#000' },
 	{ id: 'divers', label: 'Div', position: null, color: '#000' },
-	{ id: 'regionaliste', label: 'Reg', position: null, color: '#000' }
+	{ id: 'regionaliste', label: 'Reg', position: null, color: '#000' },
+	{ id: 'non_classe', label: 'NC', position: null, color: '#ccc', inBase: false }
 ];
 const lists: Record<string, ListInfo> = {
 	a: { label: 'A', family: 'gauche' },
 	b: { label: 'B', family: 'droite' },
-	c: { label: 'C', family: 'divers' }
+	c: { label: 'C', family: 'divers' },
+	n: { label: 'N', family: 'non_classe' }
 };
 const result = (voix: Record<string, number>, exprimes: number): TerritoryResult => ({
 	inscrits: 200,
@@ -69,5 +71,31 @@ describe('familyShares', () => {
 		const s = familyShares(result({ a: 30, b: 20 }, 100), lists, NO_OVERRIDES);
 		expect(s.gauche).toBeCloseTo(0.3);
 		expect(s.droite).toBeCloseTo(0.2);
+	});
+});
+
+
+describe('unclassified votes (municipal elections)', () => {
+	it('are left out of the base: the score is computed on classified votes only', () => {
+		// 30 gauche, 30 droite, 40 non classé : sur la base classée (60), le score vaut 0
+		expect(score(result({ a: 30, b: 30, n: 40 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(0);
+		// 45 gauche, 15 droite, 40 non classé : (-45 + 15) / 60 = -0,5
+		expect(score(result({ a: 45, b: 15, n: 40 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(-0.5);
+	});
+
+	it('gives no score when fewer than half of the votes are classified', () => {
+		expect(MIN_CLASSIFIED).toBe(0.5);
+		expect(score(result({ a: 20, b: 20, n: 60 }, 100), lists, families, NO_OVERRIDES)).toBeNull();
+		expect(score(result({ n: 100 }, 100), lists, families, NO_OVERRIDES)).toBeNull();
+	});
+
+	it('does not change elections without unclassified votes', () => {
+		expect(score(result({ a: 50, c: 50 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(-0.5);
+	});
+
+	it('reports the classified share', () => {
+		expect(classifiedShare(result({ a: 30, b: 30, n: 40 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(0.6);
+		expect(classifiedShare(result({ a: 50, b: 50 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(1);
+		expect(classifiedShare(result({}, 0), lists, families, NO_OVERRIDES)).toBe(1);
 	});
 });

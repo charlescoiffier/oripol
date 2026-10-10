@@ -14,6 +14,7 @@ LABELS = {
     "regi": "Régionales",
     "dpmt": "Départementales",
     "cant": "Cantonales",
+    "muni": "Municipales",
 }
 
 
@@ -44,7 +45,8 @@ def write_site_data(
     }
     classification = {
         "families": [
-            {"id": f.id, "label": f.label, "position": f.position, "color": f.color} for f in families
+            {"id": f.id, "label": f.label, "position": f.position, "color": f.color, "inBase": f.in_base}
+            for f in families
         ],
         "lists": {
             f"{e}.{k}": {"label": m.label, "family": m.family}

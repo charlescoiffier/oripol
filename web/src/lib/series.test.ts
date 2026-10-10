@@ -61,6 +61,11 @@ describe('buildSeries', () => {
 		expect([p.inscrits, p.votants, p.blancs, p.nuls]).toEqual([200, 100, 7, 3]);
 	});
 
+	it('exposes the share of classified votes (1 when every vote is classified)', () => {
+		const [p] = buildSeries(elections, 'pres', 1, 'DEP-69', families, NO_OVERRIDES);
+		expect(p.classified).toBe(1);
+	});
+
 	it('computes abstention from inscrits and votants', () => {
 		const s = buildSeries(elections, 'pres', 1, 'DEP-69', families, NO_OVERRIDES);
 		expect(s[0].abstention).toBeCloseTo(0.5);

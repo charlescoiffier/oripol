@@ -29,8 +29,11 @@ class ColumnMap:
 
 # types de scrutin pris en charge ; ceux dont les résultats sont rattachés par nom de candidat
 # (présidentielle) plutôt que par nuance politique
-SUPPORTED_TYPES = ("pres", "legi", "euro", "regi", "dpmt", "cant")
+SUPPORTED_TYPES = ("pres", "legi", "euro", "regi", "dpmt", "cant", "muni")
 KEYED_BY_NAME = {"pres"}
+# types dont les listes sans nuance sont rattachées par leur libellé abrégé (européennes 2019) ;
+# ailleurs (municipales), une liste sans nuance reste « NC » : non classée
+KEYED_BY_LABEL_WITHOUT_NUANCE = {"euro"}
 
 
 def election_id_from_source(source_id: str) -> str | None:
@@ -77,9 +80,38 @@ def to_commune_tables(
         pl.when(etype.is_in(list(KEYED_BY_NAME)))
         .then(pl.col("name").cast(pl.String).replace(names))
         # liste sans nuance (européennes 2019) : on retombe sur son libellé abrégé, puis sur « NC »
-        .otherwise(pl.coalesce(nuance, pl.col("list_label").replace(labels), pl.lit("NC")))
+        .otherwise(
+            pl.when(etype.is_in(list(KEYED_BY_LABEL_WITHOUT_NUANCE)))
+            .then(pl.coalesce(nuance, pl.col("list_label").replace(labels), pl.lit("NC")))
+            .otherwise(pl.coalesce(nuance, pl.lit("NC")))
+        )
         .alias("list_key")
     )
     joined = c.join(g.select("election_id", "bureau", "code"), on=["election_id", "bureau"], how="inner")
     votes = joined.group_by(["election_id", "code", "list_key"]).agg(pl.col("voix").sum())
     return participation, votes
+
+
+def reconcile_unclassified(participation: pl.DataFrame, votes: pl.DataFrame, types: set[str]) -> pl.DataFrame:
+    """Ramène les voix « NC » de chaque commune à ce qui reste des suffrages exprimés après les voix étiquetées.
+
+    Aux municipales, les petites communes votent pour plusieurs candidats (scrutin plurinominal) : la somme des voix
+    dépasse alors les exprimés. Ces voix sont toutes non classées ; seule compte leur part de l'électorat exprimé."""
+    etype = pl.col("election_id").str.split("-").list.first()
+    target = votes.filter(etype.is_in(list(types)))
+    rest = votes.filter(~etype.is_in(list(types)))
+    classified = (
+        target.filter(pl.col("list_key") != "NC")
+        .group_by(["election_id", "code"])
+        .agg(pl.col("voix").sum().alias("classified"))
+    )
+    nc = (
+        participation.filter(etype.is_in(list(types)))
+        .join(classified, on=["election_id", "code"], how="left")
+        .with_columns(pl.col("classified").fill_null(0))
+        .with_columns((pl.col("exprimes") - pl.col("classified")).clip(lower_bound=0).alias("voix"))
+        .filter(pl.col("voix") > 0)
+        .select("election_id", "code", pl.lit("NC").alias("list_key"), "voix")
+    )
+    kept = target.filter(pl.col("list_key") != "NC")
+    return pl.concat([rest, kept, nc.select(votes.columns)])

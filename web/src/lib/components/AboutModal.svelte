@@ -48,8 +48,8 @@
 			<ul>
 				<li>
 					Les résultats couvrent les présidentielles, les législatives, les européennes, les régionales, les
-					départementales et les cantonales, commune par commune (1er et 2d tours quand il y en a). Les
-					municipales ne sont pas encore intégrées.
+					départementales, les cantonales et les municipales, commune par commune (1er et 2d tours quand il y
+					en a).
 				</li>
 				<li>
 					Au 2d tour, seules les communes où un second tour a eu lieu ont des résultats. Les cantonales et
@@ -59,6 +59,13 @@
 				<li>Les communes fusionnées sont regroupées dans la commune actuelle (découpage 2026).</li>
 				<li>L'abstention et les blancs et nuls sont rapportés aux inscrits.</li>
 				<li>Un territoire sans donnée apparaît en gris, jamais comme « centre ».</li>
+				<li>
+					<strong>Municipales :</strong> seules les communes d'une certaine taille ont des étiquettes politiques
+					(nuances) : environ 3 500 habitants et plus en 2008 et en 2026, environ 1 000 habitants et plus en 2014 et
+					en 2020. Les voix sans étiquette sont affichées « Non classé » et ne comptent pas dans l'orientation, qui
+					n'est calculée que si au moins la moitié des voix sont étiquetées. Les départements, les régions et le pays
+					reflètent donc surtout les communes étiquetées.
+				</li>
 				<li>Les comparaisons se font entre scrutins de même nature.</li>
 				<li>
 					« Pays » regroupe tous les territoires, y compris l'outre-mer et les Français établis hors de

@@ -1,4 +1,4 @@
-import { familyShares, score } from './score';
+import { classifiedShare, familyShares, score } from './score';
 import type { Classification, ElectionData, Family, FamilyId, Precision } from './types';
 
 export interface SeriesPoint {
@@ -15,6 +15,8 @@ export interface SeriesPoint {
 	votants: number;
 	blancs: number;
 	nuls: number;
+	/** Part des exprimés portant une étiquette politique (1 hors municipales). */
+	classified: number;
 }
 
 export function buildSeries(
@@ -42,7 +44,8 @@ export function buildSeries(
 				inscrits: r.inscrits,
 				votants: r.votants,
 				blancs: r.blancs,
-				nuls: r.nuls
+				nuls: r.nuls,
+				classified: classifiedShare(r, e.lists, families, c)
 			};
 		});
 }

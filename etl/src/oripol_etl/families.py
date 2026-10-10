@@ -21,6 +21,7 @@ class Family:
     label: str
     position: float | None
     color: str
+    in_base: bool = True  # False : voix hors de la base du score (ex. listes sans étiquette)
 
 
 @dataclass(frozen=True)
@@ -37,7 +38,7 @@ def _read(path: Path) -> dict:
 
 def load_families(path: Path) -> list[Family]:
     return [
-        Family(f["id"], f["label"], f.get("position"), f["color"])
+        Family(f["id"], f["label"], f.get("position"), f["color"], bool(f.get("in_base", True)))
         for f in _read(path)["families"]
     ]
 
