@@ -3,7 +3,7 @@ from __future__ import annotations
 import polars as pl
 
 from . import config as c
-from .aggregate import build_names, build_payload
+from .aggregate import build_lists, build_names, build_payload
 from .cog import build_resolver
 from .export import write_parents, write_site_data
 from .families import load_all_mappings, load_families
@@ -45,12 +45,14 @@ def run() -> None:
         for e in sorted(participation["election_id"].unique().to_list())
     }
     people = {e: build_names(e, person_rows, geo) for e in payloads}
+    # européennes : listes nationales, un même nom partout ; pas de détail par commune
+    commune_lists = {e: {} if e.startswith("euro") else build_lists(e, person_rows, geo) for e in payloads}
     comer = _csv(c.COG_COMER)
     names = {"DEP-ZZ": "Français établis hors de France"}
     for code, label in zip(comer["comer"], comer["libelle"]):
         names[f"DEP-{code}"] = label
         names[f"REG-{code}"] = label
-    write_site_data(c.OUT, families, mappings, payloads, names=names, people=people)
+    write_site_data(c.OUT, families, mappings, payloads, names=names, people=people, commune_lists=commune_lists)
     write_parents(c.OUT, geo)
     print(f"{len(payloads)} élections, {geo.height} communes → {c.OUT}")
 

@@ -34,20 +34,14 @@ def build_payload(
     return out
 
 
-MAX_PEOPLE = 3  # au-delà, une commune n'affiche pas de noms pour une nuance
-
-
 def build_names(election_id: str, names: pl.DataFrame, geo: pl.DataFrame) -> dict[str, dict[str, str]]:
-    """Nom du candidat ou de la tête de liste par territoire et par nuance.
+    """Nom du candidat ou de la tête de liste par territoire agrégé et par nuance.
 
-    Une commune liste ses personnes ; un département, une région ou le pays n'a de nom que s'il n'y en a qu'un seul
-    en dessous (par exemple la tête de liste régionale d'une nuance dans toute sa région)."""
+    Un département, une région ou le pays n'a de nom que s'il n'y en a qu'un seul en dessous (par exemple la tête de
+    liste régionale d'une nuance dans toute sa région). Un nom identique à celui du pays n'est pas répété : le site
+    retombe sur le pays. Les communes ont leurs listes détaillées (voir `build_lists`)."""
     n = names.filter(pl.col("election_id") == election_id).join(geo, on="code", how="inner")
     out: dict[str, dict[str, str]] = {}
-    com = n.filter(pl.col("dep") != "ZZ")
-    for code, key, people in com.group_by(["code", "list_key"]).agg(pl.col("person").sort().unique()).iter_rows():
-        if len(people) <= MAX_PEOPLE:
-            out.setdefault(f"COM-{code}", {})[key] = " / ".join(people)
     for prefix, col, frame in (("DEP", "dep", n), ("REG", "reg", n.filter(pl.col("reg").is_not_null())), ("FR", None, n)):
         key_col = pl.col(col) if col else pl.lit("")
         grouped = frame.group_by([key_col.alias("k"), "list_key"]).agg(
@@ -56,4 +50,23 @@ def build_names(election_id: str, names: pl.DataFrame, geo: pl.DataFrame) -> dic
         for k, key, count, person in grouped.iter_rows():
             if count == 1:
                 out.setdefault(f"{prefix}-{k}" if col else "FR", {})[key] = person
+    country = out.get("FR", {})
+    for tid in [t for t in out if t != "FR"]:
+        out[tid] = {k: p for k, p in out[tid].items() if country.get(k) != p}
+        if not out[tid]:
+            del out[tid]
+    return out
+
+
+def build_lists(election_id: str, names: pl.DataFrame, geo: pl.DataFrame) -> dict[str, list[tuple[str, str, int]]]:
+    """Listes ou candidats de chaque commune, une à une : (nuance, nom, voix), de la plus votée à la moins votée."""
+    n = (
+        names.filter(pl.col("election_id") == election_id)
+        .join(geo, on="code", how="inner")
+        .filter(pl.col("dep") != "ZZ")
+        .sort(["code", "voix", "person"], descending=[False, True, False])
+    )
+    out: dict[str, list[tuple[str, str, int]]] = {}
+    for code, key, person, voix in n.select("code", "list_key", "person", "voix").iter_rows():
+        out.setdefault(f"COM-{code}", []).append((key, person, voix))
     return out

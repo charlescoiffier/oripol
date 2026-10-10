@@ -10,20 +10,49 @@ export interface Dataset {
 	lists: Record<string, ListInfo>;
 	loadElection: (id: string) => Promise<ElectionData>;
 	/** Candidats ou têtes de liste par territoire (clés `<élection>.<liste>`), pour les scrutins qui en disposent. */
-	loadPeople: (id: string) => Promise<People>;
+	loadPeople: (id: string) => Promise<PeopleData>;
 }
 
-export type People = Record<string, Record<string, string>>;
+/** Une liste ou un candidat d'une commune (clé `<élection>.<nuance>`). */
+export interface ListEntry {
+	listId: string;
+	person: string;
+	voix: number;
+}
 
-/** Fichier compact (table de noms + `[nuance, indice, …]` par territoire) → territoire → liste → nom. */
-export function decodePeople(election: string, raw: { names: string[]; t: Record<string, (string | number)[]> }): People {
-	const out: People = {};
+export interface PeopleData {
+	/** Noms uniques des territoires agrégés (le pays sert de repli). */
+	names: Record<string, Record<string, string>>;
+	/** Listes des communes, une à une, de la plus votée à la moins votée. */
+	lists: Record<string, ListEntry[]>;
+}
+
+export const NO_PEOPLE: PeopleData = { names: {}, lists: {} };
+
+type PackedPeople = { names: string[]; t: Record<string, (string | number)[]>; c?: Record<string, (string | number)[]> };
+
+/** Fichier compact (table de noms, `[nuance, nom, …]` et `[nuance, nom, voix, …]`) → noms et listes par territoire. */
+export function decodePeople(election: string, raw: PackedPeople): PeopleData {
+	const names: PeopleData['names'] = {};
 	for (const [tid, flat] of Object.entries(raw.t)) {
 		const row: Record<string, string> = {};
 		for (let i = 0; i + 1 < flat.length; i += 2) row[`${election}.${flat[i]}`] = raw.names[flat[i + 1] as number];
-		out[tid] = row;
+		names[tid] = row;
 	}
-	return out;
+	const lists: PeopleData['lists'] = {};
+	for (const [tid, flat] of Object.entries(raw.c ?? {})) {
+		const row: ListEntry[] = [];
+		for (let i = 0; i + 2 < flat.length; i += 3) {
+			row.push({ listId: `${election}.${flat[i]}`, person: raw.names[flat[i + 1] as number], voix: flat[i + 2] as number });
+		}
+		lists[tid] = row;
+	}
+	return { names, lists };
+}
+
+/** Noms connus pour un territoire agrégé : les siens, sinon ceux du pays. */
+export function namesFor(p: PeopleData, territoryId: string): Record<string, string> {
+	return { ...p.names.FR, ...p.names[territoryId] };
 }
 
 export function decodeTerritories(raw: {
@@ -77,14 +106,14 @@ export async function loadDataset(fetchFn: typeof fetch, base: string): Promise<
 		}
 		return p;
 	};
-	const peopleCache = new Map<string, Promise<People>>();
-	const loadPeople = (id: string): Promise<People> => {
+	const peopleCache = new Map<string, Promise<PeopleData>>();
+	const loadPeople = (id: string): Promise<PeopleData> => {
 		let p = peopleCache.get(id);
 		if (!p) {
 			const entry = index.elections.find((e) => e.id === id);
 			p = entry?.people
-				? get<{ names: string[]; t: Record<string, (string | number)[]> }>(`people/${id}.json`).then((raw) => decodePeople(id, raw))
-				: Promise.resolve({});
+				? get<PackedPeople>(`people/${id}.json`).then((raw) => decodePeople(id, raw))
+				: Promise.resolve(NO_PEOPLE);
 			p.catch(() => peopleCache.delete(id));
 			peopleCache.set(id, p);
 		}

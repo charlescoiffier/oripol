@@ -4,7 +4,7 @@
 	import { BASE } from '../lib/paths';
 	import { app } from '../lib/app-state.svelte';
 	import { NO_DATA_COLOR, SCORE_DOMAIN, scoreColor } from '../lib/color';
-	import { loadDataset, type Dataset, type People } from '../lib/data';
+	import { loadDataset, namesFor, type Dataset, type PeopleData } from '../lib/data';
 	import { defaultElection, electionForType, groupByType, menuType, shortLabel, siblings } from '../lib/elections';
 	import { composeA4, composePng, fileName, imageBlock, resultsBlock, savePdf, savePng, type Legend } from '../lib/export';
 	import { leader, resultRows } from '../lib/leader';
@@ -26,7 +26,7 @@
 
 	let dataset = $state<Dataset | null>(null);
 	let loaded = $state<Record<string, ElectionData>>({}); // résultats chargés à la demande
-	let peopleByElection = $state<Record<string, People>>({}); // candidats et têtes de liste, chargés à la demande
+	let peopleByElection = $state<Record<string, PeopleData>>({}); // listes et candidats, chargés à la demande
 	let loadError = $state<string | null>(null);
 	let error = $state<string | null>(null);
 	let leftOpen = $state(true);
@@ -101,7 +101,9 @@
 	// noms des candidats : seulement utiles au mode classique, quand le scrutin en dispose
 	$effect(() => {
 		const id = app.election;
+		// inutile tant qu'aucun territoire n'est choisi et que la carte n'est pas au niveau des communes
 		if (!dataset || !id || app.mode !== 'classique' || peopleByElection[id]) return;
+		if (!app.territory && app.level !== 'communes') return;
 		if (!dataset.index.find((e) => e.id === id)?.people) return;
 		dataset.loadPeople(id).then(
 			(p) => (peopleByElection[id] = p),
@@ -144,9 +146,11 @@
 			return c;
 		};
 		// mode classique : couleur de la famille de la liste arrivée en tête
-		const colorOfResult = (r: ElectionData['territories'][string]) => {
+		const detail = app.election ? peopleByElection[app.election]?.lists : undefined;
+		const colorOfResult = (r: ElectionData['territories'][string], id: string) => {
 			if (app.mode === 'classique') {
-				const lead = leader(r, election.lists, families, app.classification);
+				// dans une commune, la liste arrivée en tête est une liste précise, pas une nuance cumulée
+				const lead = leader(r, election.lists, families, app.classification, detail?.[id]);
 				return families.find((f) => f.id === lead?.family)?.color ?? NO_DATA_COLOR;
 			}
 			return colorOf(score(r, election.lists, ds.families, app.classification));
@@ -154,14 +158,14 @@
 		const prefix = PREFIX[app.level];
 		if (app.level === 'pays') {
 			const fr = election.territories.FR;
-			const c = fr ? colorOfResult(fr) : NO_DATA_COLOR;
+			const c = fr ? colorOfResult(fr, 'FR') : NO_DATA_COLOR;
 			for (const id of Object.keys(election.territories)) if (id.startsWith(prefix)) out[id] = c;
 			return out;
 		}
 		for (const [id, r] of Object.entries(election.territories)) {
 			// au niveau communes, les départements colorent le fond (communes omises au zoom large)
 			if (!id.startsWith(prefix) && !(app.level === 'communes' && id.startsWith('DEP-'))) continue;
-			out[id] = colorOfResult(r);
+			out[id] = colorOfResult(r, id);
 		}
 		return out;
 	});
@@ -171,7 +175,9 @@
 			? buildSeries(siblings(dataset.index, app.election), loaded, app.territory, dataset.families, app.classification)
 			: []
 	);
-	const territoryPeople = $derived(app.election && app.territory ? peopleByElection[app.election]?.[app.territory] : undefined);
+	const peopleData = $derived(app.election ? peopleByElection[app.election] : undefined);
+	const territoryPeople = $derived(peopleData && app.territory ? namesFor(peopleData, app.territory) : undefined);
+	const territoryEntries = $derived(peopleData && app.territory ? peopleData.lists[app.territory] : undefined);
 	const currentResult = $derived(app.territory && election ? election.territories[app.territory] : undefined);
 	const electionLabel = $derived(dataset?.index.find((e) => e.id === app.election)?.label ?? '');
 	const legendFamilies = $derived(families.filter((f) => f.inBase !== false));
@@ -279,7 +285,7 @@
 			const blocks: HTMLCanvasElement[] = [];
 			if (app.territory && territoryName) {
 				if (app.mode === 'classique' && ids.includes('results') && currentResult) {
-					const rows = resultRows(currentResult, election?.lists ?? {}, app.classification, territoryPeople);
+					const rows = resultRows(currentResult, election?.lists ?? {}, app.classification, territoryPeople, territoryEntries);
 					const colorOf = (f: string | undefined) => families.find((x) => x.id === f)?.color ?? '#c9c9c9';
 					blocks.push(resultsBlock(electionLabel, currentResult, rows, colorOf));
 				}
@@ -456,7 +462,7 @@
 					</header>
 				{/if}
 				{#if territoryName && app.mode === 'classique'}
-					<ResultsPanel {electionLabel} people={territoryPeople} result={currentResult} lists={election?.lists ?? {}} {families} classification={app.classification} />
+					<ResultsPanel {electionLabel} people={territoryPeople} entries={territoryEntries} result={currentResult} lists={election?.lists ?? {}} {families} classification={app.classification} />
 				{:else if territoryName}
 					<TerritoryPanel bind:this={panelRef} {points} {families} territoryName={territoryName ?? ''} />
 				{:else}

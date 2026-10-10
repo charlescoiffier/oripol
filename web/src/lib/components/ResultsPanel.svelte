@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatCount, formatPercent } from '../format';
-	import { leader, resultRows } from '../leader';
+	import { resultRows, type ListDetail } from '../leader';
 	import type { Classification, Family, ListInfo, TerritoryResult } from '../types';
 
 	let {
@@ -9,7 +9,8 @@
 		lists,
 		families,
 		classification,
-		people = {}
+		people = {},
+		entries = []
 	}: {
 		electionLabel: string;
 		result: TerritoryResult | null | undefined;
@@ -18,11 +19,14 @@
 		classification: Classification;
 		/** Candidats ou têtes de liste du territoire (clés `<élection>.<liste>`), quand ils sont connus. */
 		people?: Record<string, string>;
+		/** Listes de la commune une à une (au lieu du regroupement par nuance), quand elles sont connues. */
+		entries?: ListDetail[];
 	} = $props();
 
 	const colorOf = (id: string | undefined) => families.find((f) => f.id === id)?.color ?? '#c9c9c9';
-	const rows = $derived(result ? resultRows(result, lists, classification, people) : []);
-	const lead = $derived(result ? leader(result, lists, families, classification) : null);
+	const rows = $derived(result ? resultRows(result, lists, classification, people, entries) : []);
+	// liste arrivée en tête parmi les listes étiquetées : elle donne sa couleur au territoire sur la carte
+	const lead = $derived(rows.find((r) => r.family && families.find((f) => f.id === r.family)?.inBase !== false));
 	const leadFamily = $derived(families.find((f) => f.id === lead?.family));
 	const maxShare = $derived(Math.max(0.01, ...rows.map((r) => r.share)));
 	const abstentions = $derived(result ? Math.max(0, result.inscrits - result.votants) : 0);
@@ -40,7 +44,7 @@
 		<p class="lead">
 			{#if leadFamily && lead}
 				<i style="background:{leadFamily.color}"></i>Couleur sur la carte : {leadFamily.label.toLowerCase()}, d'après
-				« {people[lead.listId] ?? lists[lead.listId]?.label ?? lead.listId} » (les voix sans étiquette ne comptent pas).
+				« {lead.person ?? lead.label} » (les voix sans étiquette ne comptent pas).
 			{:else}
 				Aucune liste étiquetée : territoire en gris sur la carte.
 			{/if}
@@ -50,7 +54,7 @@
 				<tr><th>Liste ou candidat</th><th class="num">Voix</th><th class="num">% exprimés</th></tr>
 			</thead>
 			<tbody>
-				{#each rows as r (r.listId)}
+				{#each rows as r (r.rowId)}
 					<tr>
 						<td>
 							<span class="name">

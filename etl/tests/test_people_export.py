@@ -12,3 +12,9 @@ def test_names_are_deduplicated_in_a_table_and_referenced_by_index():
     assert [names[i] for i in t["COM-1"][1::2]] == ["Jean DUPONT", "Anne MARTIN"]
     assert t["COM-1"][0::2] == ["DVG", "LR"]
     assert t["COM-2"] == ["DVG", names.index("Jean DUPONT")]
+
+
+def test_commune_lists_are_packed_with_their_votes():
+    packed = pack_people({}, {"COM-1": [("LR", "Anne MARTIN", 50), ("DVG", "Jean DUPONT", 30)]})
+    names = packed["names"]
+    assert packed["c"]["COM-1"] == ["LR", names.index("Anne MARTIN"), 50, "DVG", names.index("Jean DUPONT"), 30]

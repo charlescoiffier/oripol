@@ -26,6 +26,7 @@ class ColumnMap:
     cand_list_label: str
     cand_votes: str
     cand_firstname: str = "prenom"
+    cand_head: str = "nom_tete_liste"
 
 
 # types de scrutin pris en charge ; ceux dont les résultats sont rattachés par nom de candidat
@@ -34,7 +35,7 @@ SUPPORTED_TYPES = ("pres", "legi", "euro", "regi", "dpmt", "cant", "muni")
 KEYED_BY_NAME = {"pres"}
 # types dont le fichier source donne le nom du candidat ou de la tête de liste par nuance (hors présidentielle,
 # déjà rattachée par nom ; européennes et départementales : libellés seulement)
-NAMED_TYPES = ("legi", "regi", "muni")
+NAMED_TYPES = ("legi", "regi", "muni", "euro")
 # types dont les listes sans nuance sont rattachées par leur libellé abrégé (européennes 2019) ;
 # ailleurs (municipales), une liste sans nuance reste « NC » : non classée
 KEYED_BY_LABEL_WITHOUT_NUANCE = {"euro"}
@@ -102,9 +103,11 @@ def to_commune_names(
     cm: ColumnMap,
     resolver: CommuneResolver,
 ) -> pl.DataFrame:
-    """Candidats ou têtes de liste par commune et par nuance : (election_id, code, list_key, person).
+    """Listes ou candidats par commune : (election_id, code, list_key, person, voix).
 
-    Seuls les scrutins de NAMED_TYPES sont traités ; les listes sans nuance (« NC ») n'ont pas de nom."""
+    `person` est le candidat (« Prénom NOM »), à défaut la tête de liste, à défaut le libellé de la liste
+    (municipales 2026, 1er tour). Les listes sans nuance (« NC ») ne sont pas détaillées : leurs voix restent
+    regroupées. Seuls les scrutins de NAMED_TYPES sont traités."""
     id_map = {s: e for s in general[cm.election_id].unique().to_list() if (e := election_id_from_source(str(s)))}
     g = general.filter(pl.col(cm.election_id).is_in(list(id_map))).select(
         pl.col(cm.election_id).replace(id_map).alias("election_id"),
@@ -114,19 +117,38 @@ def to_commune_names(
     g = g.filter(pl.col("election_id").str.split("-").list.first().is_in(list(NAMED_TYPES)))
     code_map = {c: resolver.resolve(c) for c in g["raw_code"].unique().to_list()}
     g = g.with_columns(pl.col("raw_code").replace(code_map).alias("code"))
+
+    def col(name: str) -> pl.Expr:
+        return pl.col(name).cast(pl.String) if name in candidates.columns else pl.lit(None, dtype=pl.String)
+
     c = candidates.filter(pl.col(cm.cand_election_id).is_in(list(id_map))).select(
         pl.col(cm.cand_election_id).replace(id_map).alias("election_id"),
         pl.col(cm.cand_bureau_id).alias("bureau"),
-        pl.col(cm.cand_nuance).cast(pl.String).str.replace(r"^BC-", "").alias("list_key"),
-        pl.col(cm.cand_firstname).cast(pl.String).alias("firstname"),
-        pl.col(cm.cand_name).cast(pl.String).alias("lastname"),
+        col(cm.cand_nuance).str.replace(r"^BC-", "").alias("nuance"),
+        col(cm.cand_firstname).alias("firstname"),
+        col(cm.cand_name).alias("lastname"),
+        col(cm.cand_head).alias("head"),
+        col(cm.cand_list_label).alias("label"),
+        pl.col(cm.cand_votes).alias("voix"),
     )
-    person = pl.concat_str([pl.col("firstname"), pl.col("lastname")], separator=" ", ignore_nulls=True).str.strip_chars()
+    etype = pl.col("election_id").str.split("-").list.first()
+    # même clé de liste que dans to_commune_tables (européennes sans nuance : libellé abrégé normalisé)
+    labels = {n: normalize_key(n) for n in c["label"].drop_nulls().unique().to_list()}
+    key = pl.when(etype.is_in(list(KEYED_BY_LABEL_WITHOUT_NUANCE))).then(
+        pl.coalesce(pl.col("nuance"), pl.col("label").replace(labels), pl.lit("NC"))
+    ).otherwise(pl.coalesce(pl.col("nuance"), pl.lit("NC")))
+    candidate = pl.concat_str([pl.col("firstname"), pl.col("lastname")], separator=" ", ignore_nulls=True).str.strip_chars()
+    candidate = pl.when(pl.col("lastname").is_not_null()).then(candidate)
+    # européennes : seule la tête de liste nomme la liste (les libellés de 2024 sont des slogans, pas des personnes)
+    person = pl.when(etype.is_in(list(KEYED_BY_LABEL_WITHOUT_NUANCE))).then(pl.col("head")).otherwise(
+        pl.coalesce(candidate, pl.col("head"), pl.col("label"))
+    )
     return (
-        c.join(g.select("election_id", "bureau", "code"), on=["election_id", "bureau"], how="inner")
-        .filter(pl.col("list_key").is_not_null() & (pl.col("list_key") != "NC") & pl.col("lastname").is_not_null())
-        .select("election_id", "code", "list_key", person.alias("person"))
-        .unique()
+        c.with_columns(key.alias("list_key"), person.alias("person"))
+        .join(g.select("election_id", "bureau", "code"), on=["election_id", "bureau"], how="inner")
+        .filter((pl.col("list_key") != "NC") & pl.col("person").is_not_null())
+        .group_by(["election_id", "code", "list_key", "person"])
+        .agg(pl.col("voix").sum())
     )
 
 

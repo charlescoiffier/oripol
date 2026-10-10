@@ -34,11 +34,32 @@ describe('leader', () => {
 	});
 });
 
+describe('leader with lists one by one', () => {
+	it('is the single best list, not the best nuance', () => {
+		const entries = [
+			{ listId: 'e.A', person: 'Alice 1', voix: 20 },
+			{ listId: 'e.A', person: 'Alice 2', voix: 20 }
+		];
+		// A cumule 40 contre 35 à B, mais B a la meilleure liste prise isolément
+		expect(leader(r({ 'e.A': 40, 'e.B': 35 }), lists, families, none, entries)).toEqual({ listId: 'e.B', family: 'droite' });
+		expect(leader(r({ 'e.A': 40, 'e.B': 35 }), lists, families, none)).toEqual({ listId: 'e.A', family: 'gauche' });
+	});
+});
+
 describe('resultRows', () => {
 	it('sorts lists by votes with their share of the expressed votes', () => {
 		const rows = resultRows(r({ 'e.A': 30, 'e.B': 45, 'e.NC': 25 }), lists, none);
 		expect(rows.map((x) => x.listId)).toEqual(['e.B', 'e.A', 'e.NC']);
 		expect(rows[0]).toMatchObject({ label: 'Bob (LR)', family: 'droite', voix: 45, share: 0.45 });
+	});
+	it('lists the lists of a commune one by one instead of grouping them by nuance', () => {
+		const entries = [
+			{ listId: 'e.A', person: 'Alice 1', voix: 12 },
+			{ listId: 'e.A', person: 'Alice 2', voix: 18 }
+		];
+		const rows = resultRows(r({ 'e.A': 30, 'e.B': 45 }), lists, none, {}, entries);
+		expect(rows.map((x) => [x.person, x.voix])).toEqual([[undefined, 45], ['Alice 2', 18], ['Alice 1', 12]]);
+		expect(new Set(rows.map((x) => x.rowId)).size).toBe(3);
 	});
 	it('attaches the candidate name when known', () => {
 		const rows = resultRows(r({ 'e.A': 30, 'e.B': 45 }), lists, none, { 'e.B': 'Bob DUPONT' });

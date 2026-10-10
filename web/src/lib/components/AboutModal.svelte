@@ -20,15 +20,13 @@
 			<h3>Deux modes d'affichage</h3>
 			<ul>
 				<li>
-					<strong>Classique</strong> : chaque territoire prend la couleur de la famille de la liste ou du candidat
-					arrivé en tête (les voix sans étiquette ne comptent pas). Le panneau de droite détaille les listes, avec
-					leur nombre de voix, leur pourcentage des exprimés et l'abstention. Le nom du candidat est affiché
-					pour les présidentielles, et pour les législatives, régionales et municipales dans les communes (ou, pour
-					les régionales, dans une région entière) quand une seule personne porte la nuance ; si plusieurs listes
-					partagent une même nuance dans une commune, leurs noms sont séparés par « / ». Pour les autres cas
-					(européennes, départementales, ensemble d'un département ou du pays pour les législatives et les
-					municipales), les voix sont regroupées par nuance politique.
-				</li>
+					<strong>Classique</strong> : le panneau de droite détaille les résultats, avec le nombre de voix, le
+					pourcentage des exprimés et l'abstention. Dans une commune, chaque liste ou candidat apparaît séparément,
+					avec son nom (candidat ou tête de liste, à défaut le nom de la liste) pour les législatives, les
+					régionales, les municipales et, pour les présidentielles, le candidat. La commune prend la couleur de
+					la famille de la liste arrivée en tête. Pour un département, une région ou le pays, les voix sont
+					regroupées par nuance politique : ils prennent la couleur de la nuance qui arrive en tête, avec un nom
+					quand une seule personne la porte. Les voix sans étiquette ne comptent pas pour la couleur</li>
 				<li>
 					<strong>Évolution</strong> : la carte est colorée selon l'orientation moyenne des votes (de la gauche à la
 					droite), et le panneau de droite montre sa trajectoire d'un scrutin à l'autre.
