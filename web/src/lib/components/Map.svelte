@@ -1,5 +1,5 @@
 <script lang="ts">
-	import MapView, { type Focus } from './MapView.svelte';
+	import MapView, { type Bounds, type Focus } from './MapView.svelte';
 	import type { Level } from '../types';
 
 	let {
@@ -19,6 +19,11 @@
 		onclear: () => void;
 		focus?: Focus;
 	} = $props();
+
+	let view: ReturnType<typeof MapView> & { capture: (b?: Bounds) => Promise<HTMLCanvasElement | null> };
+
+	/** Image de la carte cadrée sur `bounds` (vue actuelle si absent). */
+	export const capture = (bounds?: Bounds) => view.capture(bounds);
 </script>
 
-<MapView {level} {colors} {selected} {onselect} {onzoom} {onclear} {focus} />
+<MapView bind:this={view} {level} {colors} {selected} {onselect} {onzoom} {onclear} {focus} />

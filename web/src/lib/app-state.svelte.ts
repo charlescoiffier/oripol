@@ -1,10 +1,13 @@
 import type { Classification, FamilyId, Level } from './types';
-import type { AppState } from './url-state';
+import type { PaletteId } from './palette';
+import type { AppState, Mode } from './url-state';
 
 class AppStore {
 	election = $state<string | null>(null);
 	territory = $state<string | null>(null);
 	level = $state<Level>('departements');
+	mode = $state<Mode>('evolution');
+	palette = $state<PaletteId>('standard');
 	classification = $state<Classification>({ positions: {}, listFamilies: {} });
 
 	snapshot(): AppState {
@@ -12,6 +15,8 @@ class AppStore {
 			election: this.election,
 			territory: this.territory,
 			level: this.level,
+			mode: this.mode,
+			palette: this.palette,
 			classification: $state.snapshot(this.classification) as Classification
 		};
 	}
@@ -20,6 +25,8 @@ class AppStore {
 		this.election = s.election;
 		this.territory = s.territory;
 		this.level = s.level;
+		this.mode = s.mode;
+		this.palette = s.palette;
 		this.classification = s.classification;
 	}
 

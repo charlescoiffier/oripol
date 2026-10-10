@@ -1,9 +1,14 @@
+import type { PaletteId } from './palette';
 import type { Classification, FamilyId, Level } from './types';
+
+export type Mode = 'evolution' | 'classique';
 
 export interface AppState {
 	election: string | null;
 	territory: string | null;
 	level: Level;
+	mode: Mode;
+	palette: PaletteId;
 	classification: Classification;
 }
 
@@ -14,6 +19,8 @@ export function encodeState(s: AppState): string {
 	if (s.election) q.set('e', s.election);
 	if (s.territory) q.set('t', s.territory);
 	if (s.level !== 'departements') q.set('v', s.level);
+	if (s.mode === 'classique') q.set('m', 'c');
+	if (s.palette === 'daltonien') q.set('c', 'd');
 	const p = Object.entries(s.classification.positions).map(
 		([family, pos]) => `${family}~${pos === null ? 'x' : pos}`
 	);
@@ -48,6 +55,8 @@ export function decodeState(qs: string, validFamilies: ReadonlySet<string>): App
 		election: q.get('e'),
 		territory: q.get('t'),
 		level: level && LEVELS.has(level) ? (level as Level) : 'departements',
+		mode: q.get('m') === 'c' ? 'classique' : 'evolution',
+		palette: q.get('c') === 'd' ? 'daltonien' : 'standard',
 		classification: { positions, listFamilies }
 	};
 }

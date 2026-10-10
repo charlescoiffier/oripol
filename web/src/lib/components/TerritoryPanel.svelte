@@ -20,6 +20,20 @@
 
 	const usedFamilies = $derived(families.filter((f) => points.some((p) => (p.shares[f.id] ?? 0) > 0)));
 
+	/** Images des deux graphiques (export), avec les pastilles de légende des répartitions. */
+	export function snapshot() {
+		if (!orientationChart || !sharesChart) return null;
+		const opts = { pixelRatio: 3, backgroundColor: '#ffffff' };
+		return {
+			orientation: orientationChart.getDataURL(opts),
+			shares: sharesChart.getDataURL(opts),
+			legend: [
+				...usedFamilies.map((f) => ({ label: f.label, color: f.color })),
+				{ label: 'Abstention (sur inscrits)', color: '#444444', dashed: true }
+			]
+		};
+	}
+
 	const TOOLTIP = {
 		appendToBody: true,
 		extraCssText: 'z-index: 10000; box-shadow: 0 4px 14px rgba(0,0,0,.18);',

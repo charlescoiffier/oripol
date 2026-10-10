@@ -7,6 +7,8 @@ const state: AppState = {
 	election: 'pres-2022-1',
 	territory: 'DEP-69',
 	level: 'departements',
+	mode: 'classique',
+	palette: 'daltonien',
 	classification: {
 		positions: { gauche: -1.5, divers: null },
 		listFamilies: { 'pres-2022-1.LE PEN': 'droite' }
@@ -23,6 +25,8 @@ describe('url-state', () => {
 			election: null,
 			territory: null,
 			level: 'departements',
+			mode: 'evolution',
+			palette: 'standard',
 			classification: { positions: {}, listFamilies: {} }
 		});
 	});
@@ -33,6 +37,7 @@ describe('url-state', () => {
 			valid
 		);
 		expect(s.level).toBe('departements');
+		expect(decodeState('m=zzz&c=zzz', valid)).toMatchObject({ mode: 'evolution', palette: 'standard' });
 		expect(s.classification.positions).toEqual({ droite: 2 });
 		expect(s.classification.listFamilies).toEqual({ 'pres-2022-1.Y': 'centre' });
 	});

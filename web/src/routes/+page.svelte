@@ -6,12 +6,17 @@
 	import { NO_DATA_COLOR, SCORE_DOMAIN, scoreColor } from '../lib/color';
 	import { loadDataset, type Dataset } from '../lib/data';
 	import { defaultElection, electionForType, groupByType, menuType, shortLabel, siblings } from '../lib/elections';
+	import { composeA4, composePng, fileName, imageBlock, resultsBlock, savePdf, savePng, type Legend } from '../lib/export';
+	import { leader, resultRows } from '../lib/leader';
+	import { applyPalette, scoreEnds } from '../lib/palette';
 	import { score } from '../lib/score';
 	import { buildSeries } from '../lib/series';
 	import { planLevelChange } from '../lib/hierarchy';
 	import { levelForId } from '../lib/search';
-	import { decodeState, encodeState } from '../lib/url-state';
+	import { decodeState, encodeState, type Mode } from '../lib/url-state';
 	import AboutModal from '../lib/components/AboutModal.svelte';
+	import ExportDialog from '../lib/components/ExportDialog.svelte';
+	import ResultsPanel from '../lib/components/ResultsPanel.svelte';
 	import Map from '../lib/components/Map.svelte';
 	import RankingEditor from '../lib/components/RankingEditor.svelte';
 	import TerritoryPanel from '../lib/components/TerritoryPanel.svelte';
@@ -26,6 +31,11 @@
 	let leftOpen = $state(true);
 	let rightOpen = $state(true);
 	let aboutOpen = $state(false);
+	let exportOpen = $state(false);
+	let exporting = $state(false);
+	let exportNote = $state<string | null>(null);
+	let mapRef = $state<{ capture: (b?: [number, number, number, number]) => Promise<HTMLCanvasElement | null> }>();
+	let panelRef = $state<{ snapshot: () => { orientation: string; shares: string; legend: { label: string; color: string; dashed?: boolean }[] } | null }>();
 	let focus = $state<Focus | undefined>(undefined);
 	let boundsIndex: Record<string, [number, number, number, number]> | null = null;
 	let parents: Record<string, string> = {};
@@ -38,10 +48,19 @@
 		['communes', 'Communes']
 	];
 	const KINDS: Record<string, string> = { FR: 'Pays', REG: 'Région', DEP: 'Département', COM: 'Commune' };
+	const MODES: [Mode, string][] = [
+		['classique', 'Classique'],
+		['evolution', 'Évolution']
+	];
+	const MOBILE = 760; // largeur en dessous de laquelle la page passe sur une colonne
 	const STEPS = 40; // couleurs quantifiées : la carte des 35 000 communes reste légère à recolorer
 
 	onMount(async () => {
-		if (window.innerWidth < 1000) rightOpen = false;
+		if (window.innerWidth < MOBILE) {
+			// une colonne : les panneaux sont affichés les uns sous les autres, sans repli
+			leftOpen = true;
+			rightOpen = true;
+		} else if (window.innerWidth < 1000) rightOpen = false;
 		try {
 			const d = await loadDataset(fetch, BASE);
 			const state = decodeState(location.search.slice(1), new Set(d.families.map((f) => f.id)));
@@ -74,7 +93,7 @@
 		if (app.election) ensure(app.election);
 	});
 	$effect(() => {
-		if (!dataset || !app.election || !app.territory) return;
+		if (!dataset || !app.election || !app.territory || app.mode !== 'evolution') return;
 		for (const s of siblings(dataset.index, app.election)) ensure(s.id);
 	});
 
@@ -98,27 +117,39 @@
 		return Math.round((c / SCORE_DOMAIN) * STEPS) / STEPS * SCORE_DOMAIN;
 	};
 
+	// familles recolorées selon la palette (standard ou adaptée aux daltoniens)
+	const families = $derived(dataset ? applyPalette(dataset.families, app.palette) : []);
+
 	const colors = $derived.by(() => {
 		const out: Record<string, string> = {};
 		if (!dataset || !election) return out;
+		const ds = dataset;
 		const cache = new globalThis.Map<number | null, string>();
 		const colorOf = (s: number | null) => {
 			const q = quantized(s);
 			let c = cache.get(q);
-			if (c === undefined) cache.set(q, (c = scoreColor(q)));
+			if (c === undefined) cache.set(q, (c = scoreColor(q, app.palette)));
 			return c;
+		};
+		// mode classique : couleur de la famille de la liste arrivée en tête
+		const colorOfResult = (r: ElectionData['territories'][string]) => {
+			if (app.mode === 'classique') {
+				const lead = leader(r, election.lists, families, app.classification);
+				return families.find((f) => f.id === lead?.family)?.color ?? NO_DATA_COLOR;
+			}
+			return colorOf(score(r, election.lists, ds.families, app.classification));
 		};
 		const prefix = PREFIX[app.level];
 		if (app.level === 'pays') {
 			const fr = election.territories.FR;
-			const c = fr ? colorOf(score(fr, election.lists, dataset.families, app.classification)) : NO_DATA_COLOR;
+			const c = fr ? colorOfResult(fr) : NO_DATA_COLOR;
 			for (const id of Object.keys(election.territories)) if (id.startsWith(prefix)) out[id] = c;
 			return out;
 		}
 		for (const [id, r] of Object.entries(election.territories)) {
 			// au niveau communes, les départements colorent le fond (communes omises au zoom large)
 			if (!id.startsWith(prefix) && !(app.level === 'communes' && id.startsWith('DEP-'))) continue;
-			out[id] = colorOf(score(r, election.lists, dataset.families, app.classification));
+			out[id] = colorOfResult(r);
 		}
 		return out;
 	});
@@ -128,6 +159,11 @@
 			? buildSeries(siblings(dataset.index, app.election), loaded, app.territory, dataset.families, app.classification)
 			: []
 	);
+	const currentResult = $derived(app.territory && election ? election.territories[app.territory] : undefined);
+	const electionLabel = $derived(dataset?.index.find((e) => e.id === app.election)?.label ?? '');
+	const legendFamilies = $derived(families.filter((f) => f.inBase !== false));
+	const ends = $derived(scoreEnds(app.palette));
+
 	const territoryName = $derived(app.territory ? (dataset?.names[app.territory] ?? app.territory) : null);
 	const territoryKind = $derived(
 		app.territory ? KINDS[app.territory === 'FR' ? 'FR' : app.territory.split('-')[0]] : ''
@@ -183,6 +219,74 @@
 		await focusOn(id);
 	}
 
+	async function copyLink() {
+		try {
+			await navigator.clipboard.writeText(location.href);
+			exportNote = 'Lien copié dans le presse-papiers.';
+		} catch {
+			exportNote = 'Copie impossible : utilisez l’adresse de la barre du navigateur.';
+		}
+		setTimeout(() => (exportNote = null), 2500);
+	}
+
+	const exportChoices = $derived(
+		!app.territory
+			? []
+			: app.mode === 'classique'
+				? [{ id: 'results', label: 'Résultats du territoire' }]
+				: [
+						{ id: 'orientation', label: 'Évolution de l’orientation des votes' },
+						{ id: 'shares', label: 'Répartition des votes' }
+					]
+	);
+
+	/** Assemble carte, légende et blocs choisis, puis les enregistre en PNG ou en page A4 (PDF). */
+	async function runExport(format: 'png' | 'pdf', ids: string[]) {
+		if (!dataset || exporting) return;
+		exporting = true;
+		try {
+			await ensureGeo();
+			const bounds = app.territory ? boundsIndex?.[app.territory] : undefined;
+			const map = (await mapRef?.capture(bounds)) ?? null;
+			const blocks: HTMLCanvasElement[] = [];
+			if (app.territory && territoryName) {
+				if (app.mode === 'classique' && ids.includes('results') && currentResult) {
+					const rows = resultRows(currentResult, election?.lists ?? {}, app.classification);
+					const colorOf = (f: string | undefined) => families.find((x) => x.id === f)?.color ?? '#c9c9c9';
+					blocks.push(resultsBlock(electionLabel, currentResult, rows, colorOf));
+				}
+				if (app.mode === 'evolution') {
+					const snap = panelRef?.snapshot();
+					if (snap && ids.includes('orientation')) blocks.push(await imageBlock('Évolution de l’orientation des votes', snap.orientation));
+					if (snap && ids.includes('shares')) blocks.push(await imageBlock('Répartition des votes', snap.shares, snap.legend));
+				}
+			}
+			const legend: Legend = {
+				noData: { label: 'Pas de donnée', color: NO_DATA_COLOR },
+				...(app.mode === 'classique'
+					? { swatches: legendFamilies.map((f) => ({ label: f.label, color: f.color })) }
+					: { gradient: { ...ends, leftLabel: 'Gauche', rightLabel: 'Droite' } })
+			};
+			const input = {
+				title: electionLabel,
+				subtitle: `${territoryName ?? 'France'}${territoryName ? ` (${territoryKind})` : ''} · ${
+					app.mode === 'classique' ? 'Famille de la liste arrivée en tête' : 'Orientation moyenne des votes'
+				}`,
+				map,
+				legend,
+				blocks
+			};
+			const name = fileName(electionLabel, territoryName ?? 'france');
+			if (format === 'png') savePng(composePng(input), `${name}.png`);
+			else await savePdf(composeA4(input), `${name}.pdf`);
+			exportOpen = false;
+		} catch (e) {
+			exportNote = `Export impossible : ${e instanceof Error ? e.message : String(e)}`;
+		} finally {
+			exporting = false;
+		}
+	}
+
 	// contour de sélection : seulement si le territoire est du niveau affiché
 	const selectedOnMap = $derived(app.territory && levelForId(app.territory) === app.level ? app.territory : null);
 </script>
@@ -204,6 +308,12 @@
 					</div>
 					<button class="icon-btn" type="button" aria-label="Replier le panneau" onclick={() => (leftOpen = false)}>‹</button>
 				</header>
+
+				<div class="seg modes" role="radiogroup" aria-label="Mode d'affichage">
+					{#each MODES as [v, label] (v)}
+						<button type="button" role="radio" aria-checked={app.mode === v} class:on={app.mode === v} onclick={() => (app.mode = v)}>{label}</button>
+					{/each}
+				</div>
 
 				<div class="field">
 					<label for="election-type" class="section-title first">Type d'élection</label>
@@ -239,12 +349,25 @@
 				</div>
 
 				<div class="legend" aria-label="Légende de la carte">
-					<div
-						class="bar"
-						style="background: linear-gradient(to right, {scoreColor(-SCORE_DOMAIN)}, {scoreColor(0)}, {scoreColor(SCORE_DOMAIN)})"
-					></div>
-					<div class="ends"><span>Gauche</span><span>Droite</span></div>
+					{#if app.mode === 'classique'}
+						<p class="legend-title">Famille de la liste arrivée en tête</p>
+						<ul class="swatches">
+							{#each legendFamilies as f (f.id)}
+								<li><i style="background:{f.color}"></i>{f.label}</li>
+							{/each}
+						</ul>
+					{:else}
+						<div
+							class="bar"
+							style="background: linear-gradient(to right, {scoreColor(-SCORE_DOMAIN, app.palette)}, {scoreColor(0, app.palette)}, {scoreColor(SCORE_DOMAIN, app.palette)})"
+						></div>
+						<div class="ends"><span>Gauche</span><span>Droite</span></div>
+					{/if}
 					<div class="nodata"><i style="background:{NO_DATA_COLOR}"></i>Pas de donnée</div>
+					<label class="palette">
+						<input type="checkbox" checked={app.palette === 'daltonien'} onchange={(e) => (app.palette = e.currentTarget.checked ? 'daltonien' : 'standard')} />
+						Palette adaptée aux daltoniens
+					</label>
 					{#if app.level === 'communes'}
 						<p class="zoom-hint">Zoomez pour distinguer les communes.</p>
 					{/if}
@@ -255,7 +378,19 @@
 				{:else if !election}
 					<p class="loading-election">Chargement de l'élection…</p>
 				{/if}
-				<RankingEditor families={dataset.families} lists={electionLists} />
+				<RankingEditor {families} lists={electionLists} />
+
+				<section class="share" aria-label="Partager et exporter">
+					<h3 class="section-title">Partager et exporter</h3>
+					<div class="share-buttons">
+						<button class="btn" type="button" onclick={copyLink}>Copier le lien</button>
+						<button class="btn" type="button" disabled={exporting} onclick={() => (exportOpen = true)}>Image PNG</button>
+						<button class="btn" type="button" disabled={exporting} onclick={() => runExport('pdf', exportChoices.map((c) => c.id))}>
+							{exporting ? 'Préparation…' : 'PDF A4'}
+						</button>
+					</div>
+					{#if exportNote}<p class="note" role="status">{exportNote}</p>{/if}
+				</section>
 
 				<div class="about">
 					<button class="btn" type="button" onclick={() => (aboutOpen = true)}>À propos</button>
@@ -264,7 +399,7 @@
 		</aside>
 
 		<main>
-			<Map level={app.level} {colors} selected={selectedOnMap} onselect={select} onzoom={zoomTo} onclear={() => (app.territory = null)} {focus} />
+			<Map bind:this={mapRef} level={app.level} {colors} selected={selectedOnMap} onselect={select} onzoom={zoomTo} onclear={() => (app.territory = null)} {focus} />
 			{#if !leftOpen}
 				<button class="handle left-handle" type="button" aria-label="Déplier le panneau de gauche" onclick={() => (leftOpen = true)}>›</button>
 			{/if}
@@ -286,16 +421,19 @@
 						<span class="kind">{territoryKind}</span>
 					</header>
 				{/if}
-				{#if territoryName}
-					<TerritoryPanel {points} families={dataset.families} territoryName={territoryName ?? ''} />
+				{#if territoryName && app.mode === 'classique'}
+					<ResultsPanel {electionLabel} result={currentResult} lists={election?.lists ?? {}} {families} classification={app.classification} />
+				{:else if territoryName}
+					<TerritoryPanel bind:this={panelRef} {points} {families} territoryName={territoryName ?? ''} />
 				{:else}
-					<p class="hint">Cliquez sur la carte ou recherchez un territoire pour voir son évolution.</p>
+					<p class="hint">Cliquez sur la carte ou recherchez un territoire pour voir {app.mode === 'classique' ? 'ses résultats' : 'son évolution'}.</p>
 					<button class="btn" type="button" onclick={() => select('FR')}>Voir la France</button>
 				{/if}
 			</div>
 		</aside>
 	</div>
 	<AboutModal bind:open={aboutOpen} />
+	<ExportDialog bind:open={exportOpen} choices={exportChoices} busy={exporting} onrun={(ids) => runExport('png', ids)} />
 {/if}
 
 <style>
@@ -409,6 +547,55 @@
 		margin: 6px 0 0;
 		font-style: italic;
 	}
+	.legend-title {
+		margin: 0 0 4px;
+	}
+	.swatches {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2px 8px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.swatches li {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+	.swatches i {
+		flex: none;
+		width: 10px;
+		height: 10px;
+		border-radius: 2px;
+	}
+	.palette {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin-top: 8px;
+	}
+	.palette input {
+		margin: 0;
+		accent-color: var(--accent);
+	}
+	.modes {
+		grid-template-columns: repeat(2, 1fr);
+		margin-bottom: 12px;
+	}
+	.share {
+		margin-top: 18px;
+	}
+	.share-buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.note {
+		margin: 6px 0 0;
+		font-size: 11px;
+		color: var(--muted);
+	}
 	.nodata {
 		display: flex;
 		align-items: center;
@@ -463,6 +650,38 @@
 	}
 	.hint {
 		color: var(--muted);
+	}
+	@media (max-width: 760px) {
+		.layout {
+			display: block;
+			height: auto;
+		}
+		aside {
+			overflow: visible;
+		}
+		.inner,
+		.right .inner {
+			width: auto;
+			height: auto;
+			overflow: visible;
+		}
+		main {
+			height: 70vh;
+			min-height: 360px;
+		}
+		.handle,
+		header .icon-btn,
+		.top {
+			display: none;
+		}
+		.left {
+			border-right: 0;
+			border-bottom: 1px solid var(--line);
+		}
+		.right {
+			border-left: 0;
+			border-top: 1px solid var(--line);
+		}
 	}
 	@media (max-width: 1000px) {
 		:global(:root) {

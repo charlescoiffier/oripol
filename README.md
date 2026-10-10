@@ -28,7 +28,8 @@ Le classement des candidats par famille politique est proposé par défaut, mais
 
 ## Utiliser la carte
 
-1. Choisir un **type d'élection** (présidentielles, législatives, européennes, municipales, départementales, cantonales, régionales), puis l'**élection** précise dans le second menu, dans le panneau de gauche. Changer de type garde la même année quand elle existe.
+0. Choisir le **mode** sous le titre : **Classique** (chaque territoire prend la couleur de la famille de la liste arrivée en tête ; le panneau de droite liste les candidats ou nuances avec voix, pourcentages et abstention) ou **Évolution** (orientation moyenne des votes et trajectoire du territoire).
+1. Choisir un **type d'élection** (présidentielles, européennes, législatives, régionales, départementales et cantonales, municipales), puis l'**élection** précise dans le second menu, dans le panneau de gauche. Changer de type garde la même année quand elle existe.
 2. Choisir un **niveau** : Pays, Régions, Départements ou Communes. Au niveau Communes, il faut zoomer pour distinguer les communes.
 3. Cliquer sur un territoire (il est entouré d'un trait fin), ou le chercher dans la barre « Choix du territoire » du panneau de droite : la liste se réduit pendant la frappe. Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus. Un double clic sur un territoire zoome sur son emprise.
 4. Lire sa fiche : **évolution de l'orientation des votes** depuis 2002, puis **répartition des votes** par famille, avec l'abstention. Passer la souris sur une année ouvre une fenêtre avec l'élection, le territoire, le nombre de votants (et la participation), celui des abstentions et celui des blancs. Avant 2017, le fichier source ne distingue pas les blancs des nuls : la fenêtre indique alors « Blancs et nuls ».
@@ -45,6 +46,10 @@ Les territoires d'outre-mer sont placés dans la carte elle-même, en bas à gau
 - Chaque famille occupe une position sur un axe de `-2` (extrême gauche) à `+2` (extrême droite). Les signes servent seulement à orienter l'axe, ils n'ont aucune valeur de jugement.
 - L'**orientation moyenne** d'un territoire (son « score ») est la position moyenne de ses suffrages : la somme, sur les familles placées sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Dans les graphiques, elle est traduite en nuance : gauche, centre gauche, centre, centre droit, droite. Les familles hors axe (divers, régionalistes) diluent le score mais apparaissent dans la répartition des votes.
 - La couleur de la carte sature à `±0,6` et monte vite aux faibles écarts : un territoire fortement orienté n'a pas besoin d'atteindre `±2`, et un territoire peu orienté reste nettement coloré. Un territoire sans donnée est gris foncé.
+
+## Partager et exporter
+
+En bas du panneau de gauche, « Partager et exporter » propose : **Copier le lien** (l'adresse conserve élection, territoire, mode, niveau et classement) ; **Image PNG** (carte cadrée sur le territoire sélectionné, légende et graphiques au choix) ; **PDF A4** (tout sur une page). La case « Palette adaptée aux daltoniens » recolore la carte et les familles. Sur un écran étroit, les panneaux s'empilent les uns sous les autres.
 
 ## Ajuster le classement
 

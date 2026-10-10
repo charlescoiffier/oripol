@@ -49,7 +49,8 @@
 			fitBoundsOptions: { padding: 20 },
 			maxZoom: 11,
 			doubleClickZoom: false, // le double clic zoome sur l'emprise du territoire
-			attributionControl: false
+			attributionControl: false,
+			canvasContextAttributes: { preserveDrawingBuffer: true } // nécessaire à l'export de la carte en image
 		});
 		map = m;
 		if (import.meta.env.DEV) (window as unknown as { __map: unknown }).__map = m;
@@ -182,6 +183,38 @@
 		for (const l of LAYERS) map.setFilter(`${l}-selected`, ['==', ['get', 'id'], selected ?? '']);
 		for (const l of LAYERS) map.moveLayer(`${l}-selected`);
 	});
+
+	/**
+	 * Image de la carte, cadrée sur `bounds` si fourni (la vue de l'utilisateur est ensuite restaurée).
+	 */
+	export async function capture(bounds?: Bounds): Promise<HTMLCanvasElement | null> {
+		const m = map;
+		if (!m || !ready) return null;
+		const view = { center: m.getCenter(), zoom: m.getZoom(), bearing: m.getBearing(), pitch: m.getPitch() };
+		const settled = (event: 'idle' | 'render') =>
+			new Promise<void>((resolve) => {
+				const timer = setTimeout(resolve, 8000); // une tuile bloquée ne doit pas bloquer l'export
+				m.once(event, () => {
+					clearTimeout(timer);
+					resolve();
+				});
+			});
+		if (bounds) {
+			const idle = settled('idle');
+			m.fitBounds(bounds, { padding: 40, duration: 0, maxZoom: 11 });
+			await idle;
+		}
+		const rendered = settled('render');
+		m.triggerRepaint();
+		await rendered;
+		const src = m.getCanvas();
+		const out = document.createElement('canvas');
+		out.width = src.width;
+		out.height = src.height;
+		out.getContext('2d')?.drawImage(src, 0, 0);
+		if (bounds) m.jumpTo(view);
+		return out;
+	}
 
 	$effect(() => {
 		if (!ready || !map || !focus) return;

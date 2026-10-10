@@ -33,6 +33,7 @@
   "dependencies": {
     "d3-interpolate": "^3.0.1",
     "echarts": "^6.1.0",
+    "jspdf": "^4.2.1",
     "maplibre-gl": "^5.24.0",
     "pmtiles": "^4.5.0"
   }

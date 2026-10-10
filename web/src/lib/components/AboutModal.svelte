@@ -17,6 +17,22 @@
 		</header>
 
 		<section>
+			<h3>Deux modes d'affichage</h3>
+			<ul>
+				<li>
+					<strong>Classique</strong> : chaque territoire prend la couleur de la famille de la liste ou du candidat
+					arrivé en tête (les voix sans étiquette ne comptent pas). Le panneau de droite détaille les listes, avec
+					leur nombre de voix, leur pourcentage des exprimés et l'abstention. Le nom du candidat n'est connu que
+					pour les présidentielles ; aux autres scrutins, les voix sont regroupées par nuance politique.
+				</li>
+				<li>
+					<strong>Évolution</strong> : la carte est colorée selon l'orientation moyenne des votes (de la gauche à la
+					droite), et le panneau de droite montre sa trajectoire d'un scrutin à l'autre.
+				</li>
+			</ul>
+		</section>
+
+		<section>
 			<h3>Principe de calcul</h3>
 			<p>
 				Chaque candidat (présidentielles) ou chaque nuance politique du ministère de l'Intérieur (autres scrutins) est
@@ -38,7 +54,7 @@
 			</p>
 			<p>
 				<strong>Attention : les tendances dépendent beaucoup du classement.</strong> Par défaut, la France
-				insoumise est rangée à gauche (et non à l'extrême gauche) et Emmanuel Macron au centre. Avec ces choix, la
+				insoumise est rangée à gauche (et non à l'extrême gauche, sauf aux municipales de 2026) et Emmanuel Macron au centre. Avec ces choix, la
 				droite et l'extrême droite semblent progresser de 2002 à 2022, alors que la part de la gauche recule et
 				que le centre double. Rattachez ces candidats autrement pour voir l'effet.
 			</p>
@@ -73,6 +89,24 @@
 					France. En 2002, le jeu source omet Mayotte, les collectivités d'outre-mer et les Français de
 					l'étranger ; en 2007, les collectivités d'outre-mer et les Français de l'étranger : les totaux
 					nationaux de ces deux années sont donc un peu inférieurs aux résultats officiels.
+				</li>
+			</ul>
+		</section>
+
+		<section>
+			<h3>Partager, exporter, accessibilité</h3>
+			<ul>
+				<li>
+					« Copier le lien » conserve l'élection, le territoire, le mode, le niveau et vos réglages de
+					classement.
+				</li>
+				<li>
+					« Image PNG » exporte la carte cadrée sur le territoire sélectionné, sa légende et les graphiques de
+					votre choix ; « PDF A4 » rassemble le tout sur une page.
+				</li>
+				<li>
+					La case « Palette adaptée aux daltoniens » remplace le rouge par de l'orange et recolore les familles
+					avec des teintes distinguables par les daltoniens.
 				</li>
 			</ul>
 		</section>
