@@ -17,7 +17,7 @@ export default defineConfig({
 			adapter: adapter({ fallback: 'index.html' }),
 
 			// sous-chemin de déploiement (GitHub Pages : /oripol), vide en local
-			paths: { base: process.env.BASE_PATH ?? '' }
+			paths: { base: (process.env.BASE_PATH ?? '') as '' | `/${string}` }
 		})
 	]
 });
