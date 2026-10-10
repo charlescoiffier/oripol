@@ -24,6 +24,8 @@ export interface ExportInput {
 	legend: Legend;
 	/** Blocs de graphiques ou de tableaux déjà dessinés (largeur 1000 px). */
 	blocks: HTMLCanvasElement[];
+	/** Carte et légende incluses (par défaut oui). */
+	showMap?: boolean;
 }
 
 export const BLOCK_WIDTH = 1000;
@@ -71,7 +73,9 @@ function heading(ctx: CanvasRenderingContext2D, text: string, y: number): number
 export async function imageBlock(
 	title: string,
 	dataUrl: string,
-	legend: { label: string; color: string; dashed?: boolean }[] = []
+	legend: { label: string; color: string; dashed?: boolean }[] = [],
+	/** « ← Gauche / Droite → » sous le graphique ; `cssWidth` : largeur du graphique à l'écran (pour caler les marges). */
+	sides?: { cssWidth: number }
 ): Promise<HTMLCanvasElement> {
 	const img = await loadImage(dataUrl);
 	const h = Math.round((img.height / img.width) * BLOCK_WIDTH);
@@ -88,10 +92,25 @@ export async function imageBlock(
 		}
 		x += w;
 	}
-	const [c, ctx] = canvas(BLOCK_WIDTH, 40 + h + (legend.length ? 12 + lines * 34 : 0));
+	const sidesH = sides ? 34 : 0;
+	const [c, ctx] = canvas(BLOCK_WIDTH, 40 + h + sidesH + (legend.length ? 12 + lines * 34 : 0));
 	let y = heading(ctx, title, 0);
 	ctx.drawImage(img, 0, y, BLOCK_WIDTH, h);
-	y += h + 12;
+	y += h;
+	if (sides) {
+		// mêmes marges que dans le panneau (40 px à gauche, 14 px à droite)
+		const k = BLOCK_WIDTH / sides.cssWidth;
+		ctx.font = `22px ${FONT}`;
+		ctx.textBaseline = 'middle';
+		ctx.fillStyle = MUTED;
+		ctx.textAlign = 'left';
+		ctx.fillText('← Gauche', 40 * k, y + 16);
+		ctx.textAlign = 'right';
+		ctx.fillText('Droite →', BLOCK_WIDTH - 14 * k, y + 16);
+		ctx.textAlign = 'left';
+		y += sidesH;
+	}
+	y += 12;
 	ctx.font = `22px ${FONT}`;
 	ctx.textBaseline = 'middle';
 	x = 0;
@@ -308,47 +327,46 @@ function legendHeight(legend: Legend, w: number): number {
 
 /** Mise en page : titre, carte, légende, puis graphiques côte à côte. `fixedHeight` impose la hauteur (page A4). */
 export function compose(input: ExportInput, width: number, fixedHeight?: number): HTMLCanvasElement {
+	const showMap = input.showMap !== false;
 	const inner = width - 2 * MARGIN;
 	const n = input.blocks.length;
 	const cellW = n === 0 ? 0 : Math.min(n === 1 ? 820 : inner, (inner - (n - 1) * GAP) / n);
-	const legendH = legendHeight(input.legend, inner);
+	const legendH = showMap ? legendHeight(input.legend, inner) : 0;
 	const FOOTER = 60;
 	const headerH = MARGIN + 114 + 56;
 	const naturalBlocksH = Math.max(0, ...input.blocks.map((b) => (b.height * cellW) / b.width));
 	let blocksH = naturalBlocksH;
-	let mapH = 900;
+	let mapH = showMap ? 900 : 0;
+	let k = 1;
 	let height: number;
 	if (fixedHeight) {
 		height = fixedHeight;
 		const room = (bh: number) => height - headerH - legendH - bh - (n ? 2 * GAP : GAP) - FOOTER - MARGIN;
 		// on réduit les graphiques tant que la carte resterait trop petite
-		let k = 1;
 		while (room(naturalBlocksH * k) < 700 && k > 0.4) k -= 0.05;
 		blocksH = naturalBlocksH * k;
 		mapH = Math.max(300, room(blocksH));
-		const scale = k;
-		return draw(scale);
+	} else {
+		height = headerH + (showMap ? mapH + GAP + legendH : 0) + (n ? (showMap ? GAP : 0) + blocksH : 0) + FOOTER + MARGIN;
 	}
-	height = headerH + mapH + GAP + legendH + (n ? GAP + blocksH : 0) + FOOTER + MARGIN;
-	return draw(1);
 
-	function draw(k: number): HTMLCanvasElement {
-		const [c, ctx] = canvas(width, height);
-		let y = drawHeader(ctx, width, input);
+	const [c, ctx] = canvas(width, height);
+	let y = drawHeader(ctx, width, input);
+	if (showMap) {
 		drawMap(ctx, input.map, MARGIN, y, inner, mapH);
 		y += mapH + GAP;
 		drawLegend(ctx, input.legend, MARGIN, y, inner);
 		y += legendH + GAP;
-		const w = cellW * k;
-		const used = n * w + (n - 1) * GAP;
-		let x = MARGIN + (inner - used) / 2;
-		for (const b of input.blocks) {
-			ctx.drawImage(b, x, y, w, (b.height * w) / b.width);
-			x += w + GAP;
-		}
-		drawFooter(ctx, width, height);
-		return c;
 	}
+	const w = cellW * k;
+	const used = n * w + (n - 1) * GAP;
+	let x = MARGIN + (inner - used) / 2;
+	for (const b of input.blocks) {
+		ctx.drawImage(b, x, y, w, (b.height * w) / b.width);
+		x += w + GAP;
+	}
+	drawFooter(ctx, width, height);
+	return c;
 }
 
 export const composePng = (input: ExportInput) => compose(input, PNG_WIDTH);

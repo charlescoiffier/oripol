@@ -35,7 +35,7 @@
 	let exporting = $state(false);
 	let exportNote = $state<string | null>(null);
 	let mapRef = $state<{ capture: (b?: [number, number, number, number]) => Promise<HTMLCanvasElement | null> }>();
-	let panelRef = $state<{ snapshot: () => { orientation: string; shares: string; legend: { label: string; color: string; dashed?: boolean }[] } | null }>();
+	let panelRef = $state<{ snapshot: () => { orientation: string; orientationWidth: number; shares: string; legend: { label: string; color: string; dashed?: boolean }[] } | null }>();
 	let focus = $state<Focus | undefined>(undefined);
 	let boundsIndex: Record<string, [number, number, number, number]> | null = null;
 	let parents: Record<string, string> = {};
@@ -229,16 +229,17 @@
 		setTimeout(() => (exportNote = null), 2500);
 	}
 
-	const exportChoices = $derived(
-		!app.territory
+	const exportChoices = $derived([
+		{ id: 'map', label: 'Carte et légende' },
+		...(!app.territory
 			? []
 			: app.mode === 'classique'
 				? [{ id: 'results', label: 'Résultats du territoire' }]
 				: [
 						{ id: 'orientation', label: 'Évolution de l’orientation des votes' },
 						{ id: 'shares', label: 'Répartition des votes' }
-					]
-	);
+					])
+	]);
 
 	/** Assemble carte, légende et blocs choisis, puis les enregistre en PNG ou en page A4 (PDF). */
 	async function runExport(format: 'png' | 'pdf', ids: string[]) {
@@ -246,8 +247,9 @@
 		exporting = true;
 		try {
 			await ensureGeo();
+			const withMap = ids.includes('map');
 			const bounds = app.territory ? boundsIndex?.[app.territory] : undefined;
-			const map = (await mapRef?.capture(bounds)) ?? null;
+			const map = withMap ? ((await mapRef?.capture(bounds)) ?? null) : null;
 			const blocks: HTMLCanvasElement[] = [];
 			if (app.territory && territoryName) {
 				if (app.mode === 'classique' && ids.includes('results') && currentResult) {
@@ -257,7 +259,7 @@
 				}
 				if (app.mode === 'evolution') {
 					const snap = panelRef?.snapshot();
-					if (snap && ids.includes('orientation')) blocks.push(await imageBlock('Évolution de l’orientation des votes', snap.orientation));
+					if (snap && ids.includes('orientation')) blocks.push(await imageBlock('Évolution de l’orientation des votes', snap.orientation, [], { cssWidth: snap.orientationWidth }));
 					if (snap && ids.includes('shares')) blocks.push(await imageBlock('Répartition des votes', snap.shares, snap.legend));
 				}
 			}
@@ -273,6 +275,7 @@
 					app.mode === 'classique' ? 'Famille de la liste arrivée en tête' : 'Orientation moyenne des votes'
 				}`,
 				map,
+				showMap: withMap,
 				legend,
 				blocks
 			};
@@ -314,6 +317,11 @@
 						<button type="button" role="radio" aria-checked={app.mode === v} class:on={app.mode === v} onclick={() => (app.mode = v)}>{label}</button>
 					{/each}
 				</div>
+				<p class="mode-hint">
+					{app.mode === 'classique'
+						? 'Chaque territoire prend la couleur de la famille de la liste arrivée en tête.'
+						: 'Chaque territoire est coloré selon l’orientation moyenne de ses votes, de la gauche à la droite.'}
+				</p>
 
 				<div class="field">
 					<label for="election-type" class="section-title first">Type d'élection</label>
@@ -382,10 +390,10 @@
 
 				<section class="share" aria-label="Partager et exporter">
 					<h3 class="section-title">Partager et exporter</h3>
-					<div class="share-buttons">
-						<button class="btn" type="button" onclick={copyLink}>Copier le lien</button>
-						<button class="btn" type="button" disabled={exporting} onclick={() => (exportOpen = true)}>Image PNG</button>
-						<button class="btn" type="button" disabled={exporting} onclick={() => runExport('pdf', exportChoices.map((c) => c.id))}>
+					<div class="seg three">
+						<button type="button" onclick={copyLink}>Copier le lien</button>
+						<button type="button" disabled={exporting} onclick={() => (exportOpen = true)}>Image PNG</button>
+						<button type="button" disabled={exporting} onclick={() => runExport('pdf', exportChoices.map((c) => c.id))}>
 							{exporting ? 'Préparation…' : 'PDF A4'}
 						</button>
 					</div>
@@ -512,6 +520,7 @@
 		background: #fff;
 	}
 	.seg button {
+		cursor: pointer;
 		height: 26px;
 		padding: 0 2px;
 		border: 0;
@@ -585,15 +594,18 @@
 	}
 	.modes {
 		grid-template-columns: repeat(2, 1fr);
-		margin-bottom: 12px;
 	}
-	.share {
-		margin-top: 18px;
+	.mode-hint {
+		margin: 6px 0 18px;
+		font-size: 11px;
+		line-height: 1.35;
+		color: var(--muted);
 	}
-	.share-buttons {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
+	.seg.three {
+		grid-template-columns: repeat(3, 1fr);
+	}
+	.seg button:disabled {
+		opacity: 0.6;
 	}
 	.note {
 		margin: 6px 0 0;

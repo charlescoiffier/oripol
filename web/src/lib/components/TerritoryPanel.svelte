@@ -26,6 +26,7 @@
 		const opts = { pixelRatio: 3, backgroundColor: '#ffffff' };
 		return {
 			orientation: orientationChart.getDataURL(opts),
+			orientationWidth: orientationChart.getWidth(),
 			shares: sharesChart.getDataURL(opts),
 			legend: [
 				...usedFamilies.map((f) => ({ label: f.label, color: f.color })),

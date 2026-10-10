@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyPalette, scoreEnds } from './palette';
-import { scoreColor } from './color';
+import { NO_DATA_COLOR, scoreColor } from './color';
 import type { Family } from './types';
 
 const fam = (id: string, color: string): Family => ({ id: id as Family['id'], label: id, position: 0, color });
@@ -19,6 +19,10 @@ describe('palette', () => {
 		const ids = ['extreme_gauche', 'gauche', 'centre', 'droite', 'extreme_droite', 'divers', 'regionaliste'];
 		const colors = applyPalette(ids.map((i) => fam(i, '#000000')), 'daltonien').map((f) => f.color);
 		expect(new Set(colors).size).toBe(ids.length);
+	});
+	it('never uses the no-data grey for a family', () => {
+		const colors = applyPalette([fam('divers', '#000000')], 'daltonien').map((f) => f.color);
+		expect(colors).not.toContain(NO_DATA_COLOR);
 	});
 	it('uses an orange-to-blue gradient instead of red-to-blue', () => {
 		expect(scoreEnds('daltonien').left).not.toBe(scoreEnds('standard').left);

@@ -113,3 +113,8 @@ def test_non_classe_family_is_outside_the_political_base():
     assert families["non_classe"].in_base is False
     assert families["gauche"].in_base is True
     assert real_mappings()["muni-2020-1"]["NC"].family == "non_classe"
+
+
+def test_no_family_uses_the_no_data_grey_of_the_map():
+    fams = load_families(Path(__file__).resolve().parents[1] / "mappings" / "families.yaml")
+    assert "#8c8c8c" not in {f.color.lower() for f in fams}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatCount, formatPercent } from '../format';
-	import { resultRows } from '../leader';
+	import { leader, resultRows } from '../leader';
 	import type { Classification, Family, ListInfo, TerritoryResult } from '../types';
 
 	let {
@@ -19,6 +19,8 @@
 
 	const colorOf = (id: string | undefined) => families.find((f) => f.id === id)?.color ?? '#c9c9c9';
 	const rows = $derived(result ? resultRows(result, lists, classification) : []);
+	const lead = $derived(result ? leader(result, lists, families, classification) : null);
+	const leadFamily = $derived(families.find((f) => f.id === lead?.family));
 	const maxShare = $derived(Math.max(0.01, ...rows.map((r) => r.share)));
 	const abstentions = $derived(result ? Math.max(0, result.inscrits - result.votants) : 0);
 	const ofInscrits = (n: number) => (result && result.inscrits > 0 ? ` (${formatPercent(n / result.inscrits)})` : '');
@@ -32,6 +34,14 @@
 	{#if !result}
 		<p class="empty">Pas de résultat pour ce territoire à ce scrutin.</p>
 	{:else}
+		<p class="lead">
+			{#if leadFamily && lead}
+				<i style="background:{leadFamily.color}"></i>Couleur sur la carte : {leadFamily.label.toLowerCase()}, d'après
+				« {lists[lead.listId]?.label ?? lead.listId} » (les voix sans étiquette ne comptent pas).
+			{:else}
+				Aucune liste étiquetée : territoire en gris sur la carte.
+			{/if}
+		</p>
 		<table>
 			<thead>
 				<tr><th>Liste ou candidat</th><th class="num">Voix</th><th class="num">% exprimés</th></tr>
@@ -68,6 +78,18 @@
 	.election {
 		margin: 0 0 6px;
 		color: var(--muted);
+	}
+	.lead {
+		margin: 0 0 8px;
+		font-size: 11.5px;
+		color: var(--muted);
+	}
+	.lead i {
+		display: inline-block;
+		width: 8px;
+		height: 8px;
+		margin-right: 5px;
+		border-radius: 2px;
 	}
 	table {
 		width: 100%;

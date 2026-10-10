@@ -9,7 +9,7 @@ const DALTONIEN: Record<string, string> = {
 	centre: '#f0e442',
 	droite: '#56b4e9',
 	extreme_droite: '#0b2a5b',
-	divers: '#8a8a8a',
+	divers: '#cc79a7',
 	regionaliste: '#009e73'
 };
 
