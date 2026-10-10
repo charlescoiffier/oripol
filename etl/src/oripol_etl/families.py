@@ -48,7 +48,8 @@ def load_list_mappings(path: Path, known_families: set[str]) -> dict[str, dict[s
 
     Deux formes de fichier :
     - `elections:` : rattachement explicite élection par élection (présidentielle, par nom de candidat) ;
-    - `nuances:` + `applies_to:` : un même tableau nuance → famille appliqué à plusieurs élections.
+    - `nuances:` + `applies_to:` : un même tableau nuance → famille appliqué à plusieurs élections ;
+      `overrides:` y déroge pour une élection donnée (élection → code de nuance → famille).
     """
     data = _read(path)
     out: dict[str, dict[str, ListMapping]] = {}
@@ -68,8 +69,16 @@ def load_list_mappings(path: Path, known_families: set[str]) -> dict[str, dict[s
         add(election_id, entries)
     if "nuances" in data:
         entries = [{"key": code, **spec} for code, spec in data["nuances"].items()]
+        overrides = data.get("overrides", {})
+        for election_id, changes in overrides.items():
+            if election_id not in data["applies_to"]:
+                raise ValueError(f"{election_id}: dérogation sur une élection absente de applies_to")
+            unknown = {str(c).strip().upper() for c in changes} - {str(e["key"]).strip().upper() for e in entries}
+            if unknown:
+                raise ValueError(f"{election_id}: dérogation sur des nuances inconnues {sorted(unknown)}")
         for election_id in data["applies_to"]:
-            add(election_id, entries, normalize=False)
+            changes = overrides.get(election_id, {})
+            add(election_id, [{**e, "family": changes.get(e["key"], e["family"])} for e in entries], normalize=False)
     return out
 
 

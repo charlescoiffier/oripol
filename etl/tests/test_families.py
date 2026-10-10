@@ -61,6 +61,26 @@ def test_legislative_nuances_are_shared_across_elections():
     assert m["legi-2002-1"]["UMP"] == m["legi-2012-2"]["UMP"]
 
 
+def test_lfi_is_extreme_left_in_2026_municipales_only():
+    m = real_mappings()
+    assert m["muni-2026-1"]["LFI"].family == "extreme_gauche"
+    assert m["muni-2026-2"]["LFI"].family == "extreme_gauche"
+    assert m["muni-2020-1"]["LFI"].family == "gauche"
+    assert m["legi-2024-1"]["LFI"].family == "gauche"
+
+
+def test_override_with_unknown_code_or_family_is_rejected(tmp_path):
+    base = "applies_to: [muni-2026-1]\nnuances:\n  LFI: {label: x, family: gauche}\n"
+    bad_code = tmp_path / "a.yaml"
+    bad_code.write_text(base + "overrides:\n  muni-2026-1: {XYZ: gauche}\n")
+    with pytest.raises(ValueError):
+        load_list_mappings(bad_code, FAMILY_IDS)
+    bad_family = tmp_path / "b.yaml"
+    bad_family.write_text(base + "overrides:\n  muni-2026-1: {LFI: nope}\n")
+    with pytest.raises(ValueError):
+        load_list_mappings(bad_family, FAMILY_IDS)
+
+
 def test_unknown_family_is_rejected(tmp_path):
     bad = tmp_path / "bad.yaml"
     bad.write_text("elections:\n  pres-2002-1:\n    - {key: X, label: X, family: nope}\n", encoding="utf-8")
