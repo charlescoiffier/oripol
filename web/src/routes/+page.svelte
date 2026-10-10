@@ -124,8 +124,8 @@
 	});
 
 	const points = $derived(
-		dataset && election && app.territory
-			? buildSeries(Object.values(loaded), election.type, election.round, app.territory, dataset.families, app.classification)
+		dataset && app.election && app.territory
+			? buildSeries(siblings(dataset.index, app.election), loaded, app.territory, dataset.families, app.classification)
 			: []
 	);
 	const territoryName = $derived(app.territory ? (dataset?.names[app.territory] ?? app.territory) : null);
@@ -261,7 +261,7 @@
 		</aside>
 
 		<main>
-			<Map level={app.level} {colors} selected={selectedOnMap} onselect={select} onzoom={zoomTo} {focus} />
+			<Map level={app.level} {colors} selected={selectedOnMap} onselect={select} onzoom={zoomTo} onclear={() => (app.territory = null)} {focus} />
 			{#if !leftOpen}
 				<button class="handle left-handle" type="button" aria-label="Déplier le panneau de gauche" onclick={() => (leftOpen = true)}>›</button>
 			{/if}

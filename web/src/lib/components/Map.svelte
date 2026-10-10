@@ -8,6 +8,7 @@
 		selected = null,
 		onselect,
 		onzoom,
+		onclear,
 		focus = undefined
 	}: {
 		level: Level;
@@ -15,8 +16,9 @@
 		selected?: string | null;
 		onselect: (id: string) => void;
 		onzoom: (id: string) => void;
+		onclear: () => void;
 		focus?: Focus;
 	} = $props();
 </script>
 
-<MapView {level} {colors} {selected} {onselect} {onzoom} {focus} />
+<MapView {level} {colors} {selected} {onselect} {onzoom} {onclear} {focus} />

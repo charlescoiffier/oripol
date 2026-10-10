@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifiedLine, formatCount, formatPercent, pointDetails } from './format';
+import { classifiedLine, formatCount, formatPercent, orientationLabel, pointDetails, statusLine } from './format';
 import type { SeriesPoint } from './series';
 
 const flat = (s: string) => s.replace(/[  ]/g, ' ');
@@ -18,6 +18,8 @@ const point = (over: Partial<SeriesPoint> = {}): SeriesPoint => ({
 	blancs: 16,
 	nuls: 4,
 	classified: 1,
+	round: 1,
+	status: 'ok',
 	...over
 });
 
@@ -62,5 +64,39 @@ describe('pointDetails', () => {
 		expect(d.votants).toBe('Votants : 0');
 		expect(d.abstentions).toBe('Abstentions : 0');
 		expect(d.blancs).toBe('Blancs : 0');
+	});
+});
+
+
+describe('orientationLabel', () => {
+	it('distinguishes left, centre-left, centre, centre-right and right', () => {
+		expect(orientationLabel(-1.2)).toBe('Gauche');
+		expect(orientationLabel(-0.6)).toBe('Gauche');
+		expect(orientationLabel(-0.4)).toBe('Centre gauche');
+		expect(orientationLabel(-0.1)).toBe('Centre');
+		expect(orientationLabel(0)).toBe('Centre');
+		expect(orientationLabel(0.19)).toBe('Centre');
+		expect(orientationLabel(0.3)).toBe('Centre droit');
+		expect(orientationLabel(0.59)).toBe('Centre droit');
+		expect(orientationLabel(0.8)).toBe('Droite');
+	});
+});
+
+describe('statusLine', () => {
+	it('explains an absent first round', () => {
+		expect(statusLine(point({ status: 'absent', round: 1 }))).toBe('Pas de résultat pour ce territoire');
+	});
+	it('explains an absent second round (election decided in the first round)', () => {
+		expect(statusLine(point({ status: 'absent', round: 2 }))).toBe(
+			'Pas de second tour dans ce territoire (élection pliée au premier tour)'
+		);
+	});
+	it('explains an unscored result by the share of classified votes', () => {
+		expect(flat(statusLine(point({ status: 'unscored', classified: 0.23 })) ?? '')).toBe(
+			'Orientation non calculée : seulement 23,0 % des voix ont une étiquette politique'
+		);
+	});
+	it('is empty for a normal result', () => {
+		expect(statusLine(point())).toBeNull();
 	});
 });

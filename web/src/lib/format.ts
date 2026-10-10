@@ -34,3 +34,25 @@ export function pointDetails(p: SeriesPoint): { votants: string; abstentions: st
 export function classifiedLine(p: SeriesPoint): string | null {
 	return p.classified < 0.9995 ? `Voix avec étiquette politique : ${formatPercent(p.classified)}` : null;
 }
+
+/** Nuance d'orientation : gauche, centre gauche, centre, centre droit, droite. */
+export function orientationLabel(score: number): string {
+	if (score <= -0.6) return 'Gauche';
+	if (score <= -0.2) return 'Centre gauche';
+	if (score < 0.2) return 'Centre';
+	if (score < 0.6) return 'Centre droit';
+	return 'Droite';
+}
+
+/** Explication d'un point du graphique sans orientation affichable ; `null` pour un résultat normal. */
+export function statusLine(p: SeriesPoint): string | null {
+	if (p.status === 'absent') {
+		return p.round > 1
+			? 'Pas de second tour dans ce territoire (élection pliée au premier tour)'
+			: 'Pas de résultat pour ce territoire';
+	}
+	if (p.status === 'unscored') {
+		return `Orientation non calculée : seulement ${formatPercent(p.classified)} des voix ont une étiquette politique`;
+	}
+	return null;
+}

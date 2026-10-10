@@ -1,10 +1,21 @@
+import type { IndexEntry } from './elections';
 import { classifiedShare, familyShares, score } from './score';
 import type { Classification, ElectionData, Family, FamilyId, Precision } from './types';
+
+/**
+ * - ok : résultat et orientation calculée ;
+ * - unscored : résultat sans orientation (trop peu de voix étiquetées) ;
+ * - absent : le territoire n'a pas de résultat à ce scrutin (ex. élu dès le premier tour) ;
+ * - loading : résultats du scrutin pas encore chargés.
+ */
+export type PointStatus = 'ok' | 'unscored' | 'absent' | 'loading';
 
 export interface SeriesPoint {
 	electionId: string;
 	label: string;
 	year: number;
+	round: number;
+	status: PointStatus;
 	score: number | null;
 	shares: Partial<Record<FamilyId, number>>;
 	abstention: number | null;
@@ -19,33 +30,52 @@ export interface SeriesPoint {
 	classified: number;
 }
 
+/**
+ * Série d'un territoire sur les élections comparables (`entries`, de la plus ancienne à la plus récente).
+ * Chaque élection garde sa date, même sans résultat : le graphique peut ainsi l'exprimer.
+ */
 export function buildSeries(
-	elections: ElectionData[],
-	type: string,
-	round: number,
+	entries: IndexEntry[],
+	loaded: Record<string, ElectionData>,
 	territoryId: string,
 	families: Family[],
 	c: Classification
 ): SeriesPoint[] {
-	return elections
-		.filter((e) => e.type === type && e.round === round && e.territories[territoryId])
-		.sort((a, b) => a.year - b.year || a.round - b.round)
-		.map((e) => {
-			const r = e.territories[territoryId];
-			return {
-				electionId: e.id,
-				label: e.label,
-				year: e.year,
-				score: score(r, e.lists, families, c),
-				shares: familyShares(r, e.lists, c),
-				abstention: r.inscrits > 0 ? 1 - r.votants / r.inscrits : null,
-				blancsNuls: r.inscrits > 0 ? (r.blancs + r.nuls) / r.inscrits : null,
-				precision: r.precision,
-				inscrits: r.inscrits,
-				votants: r.votants,
-				blancs: r.blancs,
-				nuls: r.nuls,
-				classified: classifiedShare(r, e.lists, families, c)
-			};
-		});
+	return entries.map((entry) => {
+		const base = {
+			electionId: entry.id,
+			label: entry.label,
+			year: entry.year,
+			round: entry.round,
+			score: null,
+			shares: {},
+			abstention: null,
+			blancsNuls: null,
+			precision: 'commune' as Precision,
+			inscrits: 0,
+			votants: 0,
+			blancs: 0,
+			nuls: 0,
+			classified: 1
+		};
+		const e = loaded[entry.id];
+		if (!e) return { ...base, status: 'loading' as const };
+		const r = e.territories[territoryId];
+		if (!r) return { ...base, status: 'absent' as const };
+		const s = score(r, e.lists, families, c);
+		return {
+			...base,
+			status: s === null ? ('unscored' as const) : ('ok' as const),
+			score: s,
+			shares: familyShares(r, e.lists, c),
+			abstention: r.inscrits > 0 ? 1 - r.votants / r.inscrits : null,
+			blancsNuls: r.inscrits > 0 ? (r.blancs + r.nuls) / r.inscrits : null,
+			precision: r.precision,
+			inscrits: r.inscrits,
+			votants: r.votants,
+			blancs: r.blancs,
+			nuls: r.nuls,
+			classified: classifiedShare(r, e.lists, families, c)
+		};
+	});
 }

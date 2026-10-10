@@ -13,6 +13,7 @@
 		selected = null,
 		onselect,
 		onzoom,
+		onclear,
 		focus = undefined
 	}: {
 		level: Level;
@@ -20,6 +21,7 @@
 		selected?: string | null;
 		onselect: (id: string) => void;
 		onzoom: (id: string) => void;
+		onclear: () => void;
 		focus?: Focus;
 	} = $props();
 
@@ -95,6 +97,11 @@
 					if (typeof id === 'string') onzoom(id);
 				});
 			}
+			// clic dans la mer (hors de tout territoire) : on quitte la sélection
+			m.on('click', (e: { point: { x: number; y: number } }) => {
+				const layers = LAYERS.map((l) => `${l}-fill`).filter((id) => m.getLayoutProperty(id, 'visibility') !== 'none');
+				if (!m.queryRenderedFeatures([e.point.x, e.point.y], { layers }).length) onclear();
+			});
 			// contour du territoire sélectionné : un filtre par couche, toujours au-dessus
 			for (const l of LAYERS) {
 				m.addLayer({

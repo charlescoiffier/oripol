@@ -1,14 +1,14 @@
 <script lang="ts">
 	import * as echarts from 'echarts/core';
-	import { BarChart, LineChart } from 'echarts/charts';
+	import { BarChart, LineChart, ScatterChart } from 'echarts/charts';
 	import { GridComponent, MarkLineComponent, TooltipComponent } from 'echarts/components';
 	import { CanvasRenderer } from 'echarts/renderers';
 	import { onMount } from 'svelte';
-	import { classifiedLine, formatPercent, pointDetails } from '../format';
+	import { classifiedLine, formatPercent, orientationLabel, pointDetails, statusLine } from '../format';
 	import type { SeriesPoint } from '../series';
 	import type { Family } from '../types';
 
-	echarts.use([LineChart, BarChart, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
+	echarts.use([LineChart, BarChart, ScatterChart, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
 
 	let { points, families, territoryName }: { points: SeriesPoint[]; families: Family[]; territoryName: string } = $props();
 
@@ -29,20 +29,27 @@
 
 	const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-	/** En-tête des infobulles : élection et territoire, puis votants et blancs. */
+	/** En-tête des infobulles : élection et territoire, puis votants, abstentions et blancs. */
 	function tooltipHeader(p: SeriesPoint): string {
+		const title = `<div style="font-weight:600">${esc(p.label)}</div><div>${esc(territoryName)}</div>`;
+		if (p.status === 'absent' || p.status === 'loading') return title;
 		const d = pointDetails(p);
 		return (
-			`<div style="font-weight:600">${esc(p.label)}</div>` +
-			`<div>${esc(territoryName)}</div>` +
+			title +
 			`<div style="color:#666;margin:4px 0 6px">${esc(d.votants)}<br/>${esc(d.abstentions)}<br/>${esc(d.blancs)}` +
 			(classifiedLine(p) ? `<br/>${esc(classifiedLine(p) as string)}` : '') +
 			`</div>`
 		);
 	}
 
-	const wording = (s: number) =>
-		s <= -0.6 ? 'gauche marquée' : s <= -0.2 ? 'plutôt à gauche' : s < 0.2 ? 'centre' : s < 0.6 ? 'plutôt à droite' : 'droite marquée';
+	const note = (p: SeriesPoint): string =>
+		p.status === 'loading' ? '<div>Chargement…</div>' : statusLine(p) ? `<div style="color:#666">${esc(statusLine(p) as string)}</div>` : '';
+
+	// l'animation (points qui apparaissent en 1 s) ne se joue que lorsque le territoire ou la série change,
+	// pas quand on déplace un curseur du classement
+	let lastAnimated = '';
+	const hasAbsent = $derived(points.some((p) => p.status === 'absent'));
+	const hasUnscored = $derived(points.some((p) => p.status === 'unscored'));
 
 	onMount(() => {
 		orientationChart = echarts.init(orientationEl);
@@ -64,24 +71,29 @@
 	$effect(() => {
 		if (!mounted) return;
 		const years = points.map((p) => String(p.year));
+		const key = `${territoryName}|${points.map((p) => p.electionId).join(',')}`;
+		const complete = points.every((p) => p.status !== 'loading');
+		const animate = complete && key !== lastAnimated;
+		if (animate) lastAnimated = key;
 		// axe symétrique autour de la ligne médiane : gauche à gauche, droite à droite
-		const half = Math.max(0.3, ...points.map((p) => Math.abs(p.score ?? 0))) * 1.25;
+		const scores = points.flatMap((p) => (p.status === 'ok' && p.score !== null ? [Math.abs(p.score)] : []));
+		const half = Math.max(0.3, ...scores) * 1.25;
+		const marks = (status: 'absent' | 'unscored') =>
+			points.flatMap((p, i) => (p.status === status ? [[0, i]] : []));
 		orientationChart?.setOption(
 			{
+				animation: animate,
+				animationDuration: 1000,
+				animationEasing: 'linear',
 				grid: { left: 40, right: 14, top: 8, bottom: 8 },
 				tooltip: {
 					...TOOLTIP,
 					trigger: 'axis',
 					formatter: (params: { dataIndex: number }[]) => {
 						const p = points[params[0].dataIndex];
-						return (
-							tooltipHeader(p) +
-							(p.score === null
-								? p.classified < 1
-									? 'Orientation non calculée (trop peu de voix étiquetées)'
-									: 'Orientation : pas de donnée'
-								: `Orientation : ${wording(p.score)}`)
-						);
+						const line =
+							p.status === 'ok' && p.score !== null ? `Orientation : ${orientationLabel(p.score)}` : '';
+						return tooltipHeader(p) + (line ? `<div>${line}</div>` : '') + note(p);
 					}
 				},
 				xAxis: {
@@ -102,7 +114,7 @@
 						symbolSize: 8,
 						itemStyle: { color: '#db4c3f' },
 						lineStyle: { color: '#db4c3f', width: 2 },
-						data: points.map((p) => (p.score === null ? null : Number(p.score.toFixed(3)))),
+						data: points.map((p) => (p.status === 'ok' && p.score !== null ? Number(p.score.toFixed(3)) : null)),
 						markLine: {
 							silent: true,
 							symbol: 'none',
@@ -110,6 +122,26 @@
 							lineStyle: { color: '#bbb', type: 'dashed' },
 							data: [{ xAxis: 0 }]
 						}
+					},
+					{
+						// scrutin sans résultat pour ce territoire : croix grise sur la ligne médiane
+						name: 'Pas de résultat',
+						type: 'scatter',
+						symbol: 'path://M-4,-4L4,4M4,-4L-4,4',
+						symbolSize: 9,
+						itemStyle: { color: '#999', borderColor: '#999', borderWidth: 1.5 },
+						z: 5,
+						data: marks('absent')
+					},
+					{
+						// résultat sans orientation calculable (peu de voix étiquetées) : cercle gris creux
+						name: 'Orientation non calculée',
+						type: 'scatter',
+						symbol: 'circle',
+						symbolSize: 8,
+						itemStyle: { color: '#fff', borderColor: '#999', borderWidth: 1.5 },
+						z: 5,
+						data: marks('unscored')
 					}
 				]
 			},
@@ -121,18 +153,27 @@
 				tooltip: {
 					...TOOLTIP,
 					trigger: 'axis',
+					axisPointer: { type: 'none' }, // pas de trait pointillé au survol des barres
 					formatter: (params: { dataIndex: number; marker: string; seriesName: string; value: number | null }[]) => {
 						const p = points[params[0].dataIndex];
 						const rows = params
-							.filter((r) => !r.seriesName.startsWith('Abstention') && r.value !== null && r.value !== undefined && (r.value as number) > 0)
+							.filter((r) => !r.seriesName.startsWith('Abstention') && r.seriesName !== 'Pas de résultat' && r.value !== null && r.value !== undefined && (r.value as number) > 0)
 							.map((r) => `<div>${r.marker}${esc(r.seriesName)} : <b>${formatPercent(r.value as number)}</b></div>`)
 							.join('');
-						return tooltipHeader(p) + rows;
+						return tooltipHeader(p) + note(p) + rows;
 					}
 				},
 				xAxis: { type: 'category', data: years, axisTick: { show: false } },
 				yAxis: { type: 'value', max: 1, axisLabel: { formatter: (v: number) => `${Math.round(v * 100)} %` } },
 				series: [
+					{
+						// emplacement d'un scrutin sans résultat : barre vide en pointillés
+						name: 'Pas de résultat',
+						type: 'bar' as const,
+						stack: 'absent',
+						itemStyle: { color: '#f6f6f6', borderColor: '#bbb', borderType: 'dashed' as const, borderWidth: 1 },
+						data: points.map((p) => (p.status === 'absent' ? 1 : 0))
+					},
 					...families.map((f) => ({
 						name: f.label,
 						type: 'bar' as const,
@@ -160,9 +201,15 @@
 		<p class="empty">Pas de données pour ce territoire.</p>
 	{/if}
 
-	<h3 class="section-title">Évolution de l'orientation du vote</h3>
+	<h3 class="section-title">Évolution de l'orientation des votes</h3>
 	<div bind:this={orientationEl} class="chart orientation"></div>
 	<div class="sides"><span>← Gauche</span><span>Droite →</span></div>
+	{#if hasAbsent || hasUnscored}
+		<ul class="marks">
+			{#if hasAbsent}<li><span class="cross">×</span>Pas de résultat à ce scrutin (par exemple : élection pliée au premier tour)</li>{/if}
+			{#if hasUnscored}<li><span class="ring"></span>Orientation non calculée (peu de voix étiquetées)</li>{/if}
+		</ul>
+	{/if}
 
 	<h3 class="section-title">Répartition des votes</h3>
 	<div bind:this={sharesEl} class="chart"></div>
@@ -188,6 +235,34 @@
 		padding: 0 14px 0 40px;
 		font-size: 11px;
 		color: var(--muted);
+	}
+	.marks {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin: 4px 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 11px;
+		color: var(--muted);
+	}
+	.marks li {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.cross {
+		width: 10px;
+		text-align: center;
+		font-weight: 700;
+		color: #999;
+	}
+	.ring {
+		width: 8px;
+		height: 8px;
+		margin: 0 1px;
+		border: 1.5px solid #999;
+		border-radius: 50%;
 	}
 	.empty {
 		color: var(--muted);
