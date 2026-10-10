@@ -8,7 +8,11 @@ ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw"
 OUT = ROOT.parent / "web" / "static" / "data"
 FAMILIES = ROOT / "mappings" / "families.yaml"
-MAPPINGS = [ROOT / "mappings" / "presidentielle.yaml", ROOT / "mappings" / "legislatives.yaml"]
+MAPPINGS = [
+    ROOT / "mappings" / "presidentielle.yaml",
+    ROOT / "mappings" / "nuances.yaml",
+    ROOT / "mappings" / "europeennes-2019.yaml",
+]
 
 # --- COG Insee millésime 2026 (colonnes lues en minuscules) ---
 COG_COMMUNES = RAW / "v_commune.csv"  # typecom, com, dep, reg
@@ -32,5 +36,6 @@ COLUMNS = ColumnMap(
     cand_bureau_id="id_brut_miom",
     cand_name="nom",
     cand_nuance="nuance",
+    cand_list_label="libelle_abrege_liste",
     cand_votes="voix",
 )

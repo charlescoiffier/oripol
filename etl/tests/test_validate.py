@@ -63,3 +63,28 @@ def test_coverage_raises_when_a_real_commune_is_unresolved():
     part, current = coverage_tables(50_000)
     with pytest.raises(ValueError, match="codes commune non résolus"):
         validate_coverage(part, current)
+
+
+def test_one_defective_commune_in_a_large_election_is_reported_but_not_blocking(capsys):
+    many = 5000
+    part = pl.DataFrame(
+        {"election_id": ["e"] * many, "code": [f"C{i}" for i in range(many)], "exprimes": [1000] * (many - 1) + [439]}
+    )
+    votes = pl.DataFrame(
+        {
+            "election_id": ["e"] * many,
+            "code": [f"C{i}" for i in range(many)],
+            "list_key": ["X"] * many,
+            "voix": [1000] * (many - 1) + [259],  # 180 voix manquantes dans une commune
+        }
+    )
+    validate(part, votes, {"e": {"X": ListMapping("X", "X", "gauche")}})
+    assert "C4999" in capsys.readouterr().out  # signalée
+
+
+def test_widespread_mismatches_still_block():
+    many = 100
+    part = pl.DataFrame({"election_id": ["e"] * many, "code": [f"C{i}" for i in range(many)], "exprimes": [1000] * many})
+    votes = part.with_columns(pl.lit("X").alias("list_key"), (pl.col("exprimes") - 200).alias("voix")).drop("exprimes")
+    with pytest.raises(ValueError, match="somme des voix"):
+        validate(part, votes, {"e": {"X": ListMapping("X", "X", "gauche")}})

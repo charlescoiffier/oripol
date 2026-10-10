@@ -11,8 +11,13 @@ def validate(
     mappings: dict[str, dict[str, ListMapping]],
     tolerance_abs: int = 3,
     tolerance_rel: float = 0.005,
+    max_election_deviation: float = 0.0005,
 ) -> None:
-    """Contrôles bloquants. Un écart de quelques voix (recomptes dans le fichier officiel) est toléré."""
+    """Contrôles bloquants.
+
+    - un écart de quelques voix (recomptes dans le fichier officiel) est toléré ;
+    - des communes isolées défectueuses sont signalées, sans bloquer, tant que leurs écarts pèsent moins de
+      `max_election_deviation` des exprimés du scrutin ; au-delà, le traitement échoue."""
     sums = votes.group_by(["election_id", "code"]).agg(pl.col("voix").sum().alias("sum_voix"))
     bad = (
         participation.join(sums, on=["election_id", "code"], how="left")
@@ -23,7 +28,17 @@ def validate(
         )
     )
     if bad.height:
-        raise ValueError(f"somme des voix ≠ exprimés pour {bad.height} commune(s):\n{bad.head(10)}")
+        totals = participation.group_by("election_id").agg(pl.col("exprimes").sum().alias("total"))
+        weight = (
+            bad.with_columns((pl.col("sum_voix") - pl.col("exprimes")).abs().alias("gap"))
+            .group_by("election_id")
+            .agg(pl.col("gap").sum())
+            .join(totals, on="election_id")
+            .with_columns((pl.col("gap") / pl.col("total")).alias("share"))
+        )
+        if weight.filter(pl.col("share") > max_election_deviation).height:
+            raise ValueError(f"somme des voix ≠ exprimés pour {bad.height} commune(s):\n{bad.head(10)}")
+        print(f"avertissement : {bad.height} commune(s) à somme des voix ≠ exprimés (source) :\n{bad.head(10)}")
 
     missing = []
     for election_id, keys in votes.group_by("election_id").agg(pl.col("list_key").unique()).iter_rows():

@@ -1,0 +1,37 @@
+# Européennes 2019 : le fichier source ne porte aucune nuance, les listes sont rattachées par leur nom abrégé.
+elections:
+  euro-2019-1:
+    - {key: PRENEZ LE POUVOIR, label: "Prenez le pouvoir (RN, J. Bardella)", family: extreme_droite}
+    - {key: RENAISSANCE, label: "Renaissance (LREM, N. Loiseau)", family: centre}
+    - {key: EUROPE ECOLOGIE, label: "Europe Écologie (EELV, Y. Jadot)", family: gauche}
+    - {key: UNION DROITE CENTRE, label: "Union droite-centre (LR, F.-X. Bellamy)", family: droite}
+    - {key: LA FRANCE INSOUMISE, label: "La France insoumise (M. Aubry)", family: gauche}
+    - {key: ENVIE D'EUROPE, label: "Envie d'Europe (PS-Place publique, R. Glucksmann)", family: gauche}
+    - {key: DEBOUT LA FRANCE, label: "Debout la France (N. Dupont-Aignan)", family: extreme_droite}
+    - {key: LISTE CITOYENNE, label: "Liste citoyenne (Génération.s, B. Hamon)", family: gauche}
+    - {key: LES EUROPEENS, label: "Les Européens (UDI, J.-C. Lagarde)", family: centre}
+    - {key: POUR L'EUROPE DES GENS, label: "Pour l'Europe des gens (PCF, I. Brossat)", family: gauche}
+    - {key: PARTI ANIMALISTE, label: "Parti animaliste (H. Thouy)", family: divers}
+    - {key: URGENCE ECOLOGIE, label: "Urgence écologie (D. Bourg)", family: divers}
+    - {key: ENSEMBLE POUR LE FREXIT, label: "Ensemble pour le Frexit (UPR, F. Asselineau)", family: divers}
+    - {key: LUTTE OUVRIERE, label: "Lutte ouvrière (N. Arthaud)", family: extreme_gauche}
+    - {key: ENSEMBLE PATRIOTES, label: "Ensemble Patriotes (Les Patriotes, F. Philippot)", family: extreme_droite, to_validate: true}
+    - {key: ALLIANCE JAUNE, label: "Alliance jaune (gilets jaunes)", family: divers}
+    - {key: LES OUBLIES DE L'EUROPE, label: "Les oubliés de l'Europe", family: divers}
+    - {key: PARTI PIRATE, label: "Parti pirate", family: divers}
+    - {key: EUROPE AU SERVICE PEUPLES, label: "Europe au service des peuples", family: divers}
+    - {key: ESPERANTO, label: "Espéranto", family: divers}
+    - {key: PARTI FED. EUROPEEN, label: "Parti fédéraliste européen", family: divers}
+    - {key: DECROISSANCE 2019, label: "Décroissance 2019", family: divers}
+    - {key: ALLONS ENFANTS, label: "Allons enfants (S. Caillaud)", family: divers, to_validate: true}
+    - {key: A VOIX EGALES, label: "À voix égales", family: divers}
+    - {key: PACE, label: "PACE", family: divers}
+    - {key: INITIATIVE CITOYENNE, label: "Initiative citoyenne", family: divers}
+    - {key: UDLEF, label: "UDLEF", family: divers}
+    - {key: LISTE DE LA RECONQUETE, label: "Liste de la reconquête (V. Vauclin)", family: extreme_droite, to_validate: true}
+    - {key: UNE FRANCE ROYALE, label: "Une France royale", family: extreme_droite, to_validate: true}
+    - {key: DEMOCRATIE REPRESENTATIVE, label: "Démocratie représentative", family: divers}
+    - {key: EVOLUTION CITOYENNE, label: "Évolution citoyenne", family: divers}
+    - {key: LA LIGNE CLAIRE, label: "La ligne claire (R. Camus)", family: extreme_droite, to_validate: true}
+    - {key: REVOLUTIONNAIRE, label: "Révolutionnaire (communistes révolutionnaires)", family: extreme_gauche}
+    - {key: NEUTRE ET ACTIF, label: "Neutre et actif", family: divers}

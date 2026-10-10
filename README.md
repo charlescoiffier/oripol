@@ -18,13 +18,13 @@ Aucun compte, aucun serveur applicatif : le site est statique et tout le calcul 
 
 ## Le projet en bref
 
-Oripol colore une carte de France selon l'orientation du vote (de la gauche à la droite) pour chaque élection, et trace l'évolution d'un territoire dans le temps. Cette version couvre les présidentielles (1er et 2d tours, 2002 à 2022) et les législatives (1er et 2d tours, 2002 à 2024), pour **les 35 000 communes**, les départements, les régions, l'outre-mer et les Français établis hors de France.
+Oripol colore une carte de France selon l'orientation du vote (de la gauche à la droite) pour chaque élection, et trace l'évolution d'un territoire dans le temps. Cette version couvre les présidentielles (2002-2022), les législatives (2002-2024), les européennes (1999-2024), les régionales (2004-2021), les départementales (2015-2021) et les cantonales (2001-2011), 1er et 2d tours quand il y en a, pour **les 35 000 communes**, les départements, les régions, l'outre-mer et les Français établis hors de France.
 
 Le classement des candidats par famille politique est proposé par défaut, mais chacun peut le modifier.
 
 ## Utiliser la carte
 
-1. Choisir un **type d'élection** (présidentielles, législatives), puis l'**élection** précise dans le second menu, dans le panneau de gauche. Changer de type garde la même année quand elle existe.
+1. Choisir un **type d'élection** (présidentielles, législatives, européennes, départementales, cantonales, régionales), puis l'**élection** précise dans le second menu, dans le panneau de gauche. Changer de type garde la même année quand elle existe.
 2. Choisir un **niveau** : Pays, Régions, Départements ou Communes. Au niveau Communes, il faut zoomer pour distinguer les communes.
 3. Cliquer sur un territoire (il est entouré d'un trait fin), ou le chercher dans la barre « Choix du territoire » du panneau de droite : la liste se réduit pendant la frappe. Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus. Un double clic sur un territoire zoome sur son emprise.
 4. Lire sa fiche : **évolution de l'orientation du vote** depuis 2002, puis **répartition des votes** par famille, avec l'abstention. Passer la souris sur une année ouvre une fenêtre avec l'élection, le territoire, le nombre de votants (et la participation), celui des abstentions et celui des blancs. Avant 2017, le fichier source ne distingue pas les blancs des nuls : la fenêtre indique alors « Blancs et nuls ».
@@ -59,7 +59,7 @@ La carte et les courbes se recalculent aussitôt. L'adresse de la page conserve 
 - Un territoire sans donnée apparaît en gris, jamais comme « centre ».
 - Les tendances dépendent beaucoup du classement : avec les choix par défaut (La France insoumise à gauche, Emmanuel Macron au centre), la droite et l'extrême droite semblent progresser de 2002 à 2022. Rattacher ces candidats autrement change nettement la courbe.
 - Le jeu source est incomplet pour deux scrutins : en 2002 il omet Mayotte, les collectivités d'outre-mer et les Français de l'étranger ; en 2007, les collectivités d'outre-mer et les Français de l'étranger. Le total « Pays » de ces deux années est donc un peu inférieur au résultat officiel.
-- Pas encore de municipales, départementales, régionales ni européennes. Au 2d tour des législatives, seules les communes concernées par un second tour ont des résultats.
+- Pas encore de municipales. Au 2d tour, seules les communes concernées par un second tour ont des résultats ; cantonales et départementales ne renouvellent qu'une partie des cantons à chaque scrutin, le reste de la carte est en gris.
 
 ---
 
@@ -74,7 +74,7 @@ Prérequis : [uv](https://docs.astral.sh/uv/), Node.js et [tippecanoe](https://g
 ./build-data.sh   # (re)génère seulement les données : ~240 Mo téléchargés la première fois
 ```
 
-Les résultats de chaque élection ne sont chargés qu'à la demande (environ 2 Mo chacune). Les données générées (`web/static/data/`) et les sources téléchargées (`etl/data/`) ne sont pas versionnées : tout ce qui peut être régénéré est exclu du dépôt.
+Les résultats de chaque élection ne sont chargés qu'à la demande (environ 2 Mo chacune, une centaine de Mo pour les 48 élections). Les données générées (`web/static/data/`) et les sources téléchargées (`etl/data/`) ne sont pas versionnées : tout ce qui peut être régénéré est exclu du dépôt.
 
 Avec Node 23.5, `npm install` doit recevoir `--engine-strict=false` (c'est ce que fait `start.sh`).
 
@@ -87,7 +87,7 @@ sources officielles (parquet, CSV)
   → site statique SvelteKit : MapLibre (cartes) + ECharts (courbes), score calculé dans le navigateur
 ```
 
-- **ETL** (`etl/`) : lit les fichiers, résout les fusions de communes avec l'historique des mouvements du COG, rattache les candidats ou les nuances à une famille (`etl/mappings/` : `families.yaml`, `presidentielle.yaml`, `legislatives.yaml`), agrège commune → département → région → pays, puis **échoue sans rien écrire** si la somme des voix d'une commune diffère des exprimés ou si un candidat n'a pas de famille.
+- **ETL** (`etl/`) : lit les fichiers, résout les fusions de communes avec l'historique des mouvements du COG, rattache les candidats ou les nuances à une famille (`etl/mappings/` : `families.yaml`, `presidentielle.yaml` par candidat, `nuances.yaml` par nuance du ministère pour tous les autres scrutins, `europeennes-2019.yaml` par liste), agrège commune → département → région → pays, puis **échoue sans rien écrire** si la somme des voix d'une commune diffère des exprimés ou si un candidat n'a pas de famille.
 - **Site** (`web/`) : charge les résultats bruts et recalcule le score à chaque réglage, ce qui rend le classement ajustable sans serveur. Les contours sont des tuiles PMTiles ; la couche des 35 000 communes n'est embarquée qu'à partir du zoom 6.
 - **Outre-mer** : `etl/src/oripol_etl/inset.py` déplace et met à l'échelle chaque territoire dans un cadre au sud-ouest de la métropole, en conservant sa forme réelle (conversion longitude → distance selon la latitude).
 - **Territoires** : identifiants `FR`, `REG-<code>`, `DEP-<code>` et `COM-<code INSEE>`. Les collectivités d'outre-mer sont à la fois leur propre département et leur propre région ; les Français de l'étranger forment le département fictif `DEP-ZZ`, sans carte.

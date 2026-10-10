@@ -16,6 +16,7 @@ CM = ColumnMap(
     cand_bureau_id="bv",
     cand_name="nom",
     cand_nuance="nuance",
+    cand_list_label="libelle_abrege_liste",
     cand_votes="voix",
 )
 
@@ -25,7 +26,11 @@ def test_election_id_from_source():
     assert election_id_from_source("2022_pres_t2") == "pres-2022-2"
     assert election_id_from_source("2022_legi_t1") == "legi-2022-1"
     assert election_id_from_source("2022_legi_t2") == "legi-2022-2"
-    assert election_id_from_source("2022_euro_t1") is None  # pas encore pris en charge
+    assert election_id_from_source("2024_euro_t1") == "euro-2024-1"
+    assert election_id_from_source("2021_regi_t2") == "regi-2021-2"
+    assert election_id_from_source("2015_dpmt_t1") == "dpmt-2015-1"
+    assert election_id_from_source("2008_cant_t2") == "cant-2008-2"
+    assert election_id_from_source("2020_muni_t1") is None  # municipales : pas encore pris en charge
 
 
 def general():
@@ -50,6 +55,7 @@ def candidates():
             "bv": ["b1", "b1", "b2", "b2", "b3", "b3", "b4", "b4", "b5"],
             "nom": ["Macron", "Le Pen", "Macron", "Le Pen", "Macron", "Mélenchon", "Macron", "Le Pen", "Macron"],
             "nuance": [None] * 9,
+            "libelle_abrege_liste": [None] * 9,
             "voix": [40, 37, 20, 18, 100, 42, 3, 2, 77],
         }
     )
@@ -98,6 +104,7 @@ def test_legislative_votes_are_keyed_by_nuance_not_by_name():
             "bv": ["b1", "b1", "b2", "b2"],
             "nom": ["Dupont", "Martin", "Durand", "Petit"],
             "nuance": ["ENS", "RN", "ENS", "NUP"],
+            "libelle_abrege_liste": [None] * 4,
             "voix": [40, 38, 30, 48],
         }
     )
@@ -106,3 +113,49 @@ def test_legislative_votes_are_keyed_by_nuance_not_by_name():
     assert part["election_id"].unique().to_list() == ["legi-2022-1"]
     v = {r["list_key"]: r["voix"] for r in votes.iter_rows(named=True)}
     assert v == {"ENS": 70, "RN": 38, "NUP": 48}  # candidats de même nuance regroupés
+
+
+def _simple_general(election_id):
+    return pl.DataFrame(
+        {
+            "id_election": [election_id] * 2,
+            "bv": ["b1", "b2"],
+            "code_commune": ["22222", "22222"],
+            "inscrits": [100, 100],
+            "votants": [80, 80],
+            "blancs": [1, 1],
+            "nuls": [1, 1],
+            "exprimes": [78, 78],
+        }
+    )
+
+
+def test_binome_prefix_is_stripped_from_departmental_nuances():
+    candidates = pl.DataFrame(
+        {
+            "id_election": ["2021_dpmt_t1"] * 2,
+            "bv": ["b1", "b2"],
+            "nom": ["A", "B"],
+            "nuance": ["BC-SOC", "BC-UD"],
+            "libelle_abrege_liste": [None, None],
+            "voix": [40, 30],
+        }
+    )
+    _, votes = to_commune_tables(_simple_general("2021_dpmt_t1"), candidates, CM, CommuneResolver({}, {"22222"}))
+    assert sorted(votes["list_key"].to_list()) == ["SOC", "UD"]
+    assert votes["election_id"].unique().to_list() == ["dpmt-2021-1"]
+
+
+def test_lists_without_nuance_are_keyed_by_their_normalised_short_label():
+    candidates = pl.DataFrame(
+        {
+            "id_election": ["2019_euro_t1"] * 2,
+            "bv": ["b1", "b2"],
+            "nom": [None, None],
+            "nuance": [None, None],
+            "libelle_abrege_liste": ["UNION DROITE-CENTRE", "EUROPE ÉCOLOGIE"],
+            "voix": [40, 30],
+        }
+    )
+    _, votes = to_commune_tables(_simple_general("2019_euro_t1"), candidates, CM, CommuneResolver({}, {"22222"}))
+    assert sorted(votes["list_key"].to_list()) == ["EUROPE ECOLOGIE", "UNION DROITE CENTRE"]

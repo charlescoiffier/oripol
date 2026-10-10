@@ -7,7 +7,14 @@ import polars as pl
 
 from .families import Family, ListMapping
 
-LABELS = {"pres": "Présidentielle", "legi": "Législatives"}
+LABELS = {
+    "pres": "Présidentielle",
+    "legi": "Législatives",
+    "euro": "Européennes",
+    "regi": "Régionales",
+    "dpmt": "Départementales",
+    "cant": "Cantonales",
+}
 
 
 def _parse(election_id: str) -> tuple[str, int, int]:

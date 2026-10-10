@@ -10,7 +10,9 @@ FAMILY_IDS = {"extreme_gauche", "gauche", "centre", "droite", "extreme_droite", 
 
 def real_mappings():
     families = {f.id for f in load_families(MAPPINGS / "families.yaml")}
-    return load_all_mappings([MAPPINGS / "presidentielle.yaml", MAPPINGS / "legislatives.yaml"], families)
+    return load_all_mappings(
+        [MAPPINGS / "presidentielle.yaml", MAPPINGS / "nuances.yaml", MAPPINGS / "europeennes-2019.yaml"], families
+    )
 
 
 def test_normalize_key_strips_accents_hyphens_and_case():
@@ -23,15 +25,19 @@ def test_families_file_is_the_expected_set():
     assert {f.id for f in load_families(MAPPINGS / "families.yaml")} == FAMILY_IDS
 
 
-def test_real_mappings_cover_presidential_and_legislative_elections():
+def test_real_mappings_cover_all_supported_elections():
     m = real_mappings()
     pres = {f"pres-{y}-{r}" for y in (2002, 2007, 2012, 2017, 2022) for r in (1, 2)}
     legi = {f"legi-{y}-{r}" for y in (2002, 2007, 2012, 2017, 2022, 2024) for r in (1, 2)}
-    assert set(m) == pres | legi
+    euro = {f"euro-{y}-1" for y in (1999, 2004, 2009, 2014, 2019, 2024)}
+    regi = {f"regi-{y}-{r}" for y in (2004, 2010, 2015, 2021) for r in (1, 2)}
+    dpmt = {f"dpmt-{y}-{r}" for y in (2015, 2021) for r in (1, 2)}
+    cant = {f"cant-{y}-{r}" for y in (2001, 2004, 2008, 2011) for r in (1, 2)}
+    assert set(m) == pres | legi | euro | regi | dpmt | cant
     for election, lists in m.items():
         for key, mapping in lists.items():
             assert mapping.family in FAMILY_IDS, (election, key)
-            assert key == normalize_key(key)
+            assert key == key.strip().upper()
 
 
 def test_known_candidates_counts():
@@ -66,3 +72,16 @@ def test_same_election_defined_twice_is_rejected(tmp_path):
     a.write_text("elections:\n  pres-2002-1:\n    - {key: X, label: X, family: gauche}\n", encoding="utf-8")
     with pytest.raises(ValueError, match="deux fois"):
         load_all_mappings([a, a], FAMILY_IDS)
+
+
+def test_european_2019_lists_are_mapped_by_name():
+    m = real_mappings()
+    assert len(m["euro-2019-1"]) == 34
+    assert m["euro-2019-1"]["PRENEZ LE POUVOIR"].family == "extreme_droite"
+    assert m["euro-2019-1"]["UNION DROITE CENTRE"].family == "droite"
+
+
+def test_nuance_codes_with_a_hyphen_keep_it():
+    m = real_mappings()
+    assert "M-NC" in m["cant-2008-1"]  # code de nuance : pas de normalisation de nom
+    assert m["cant-2008-1"]["M-NC"].family == "centre"

@@ -19,7 +19,7 @@
 		<section>
 			<h3>Principe de calcul</h3>
 			<p>
-				Chaque candidat (présidentielles) ou chaque nuance politique du ministère de l'Intérieur (législatives) est
+				Chaque candidat (présidentielles) ou chaque nuance politique du ministère de l'Intérieur (autres scrutins) est
 				rattaché à une famille politique : extrême gauche, gauche, centre, droite,
 				extrême droite, divers et régionalistes. Les écologistes (EELV et prédécesseurs) sont classés à
 				gauche par défaut.
@@ -46,7 +46,16 @@
 		<section>
 			<h3>Méthodologie</h3>
 			<ul>
-				<li>Les résultats couvrent les présidentielles (1er et 2d tours, 2002 à 2022) et les législatives (1er et 2d tours, 2002 à 2024), commune par commune. Au 2d tour des législatives, seules les communes où un second tour a eu lieu ont des résultats.</li>
+				<li>
+					Les résultats couvrent les présidentielles, les législatives, les européennes, les régionales, les
+					départementales et les cantonales, commune par commune (1er et 2d tours quand il y en a). Les
+					municipales ne sont pas encore intégrées.
+				</li>
+				<li>
+					Au 2d tour, seules les communes où un second tour a eu lieu ont des résultats. Les cantonales et
+					départementales ne renouvellent qu'une partie des cantons à chaque scrutin : le reste de la carte est
+					en gris.
+				</li>
 				<li>Les communes fusionnées sont regroupées dans la commune actuelle (découpage 2026).</li>
 				<li>L'abstention et les blancs et nuls sont rapportés aux inscrits.</li>
 				<li>Un territoire sans donnée apparaît en gris, jamais comme « centre ».</li>

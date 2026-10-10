@@ -52,10 +52,11 @@ def load_list_mappings(path: Path, known_families: set[str]) -> dict[str, dict[s
     data = _read(path)
     out: dict[str, dict[str, ListMapping]] = {}
 
-    def add(election_id: str, entries: list[dict]) -> None:
+    def add(election_id: str, entries: list[dict], normalize: bool = True) -> None:
         out[election_id] = {}
         for e in entries:
-            key = normalize_key(e["key"])
+            # noms de candidats/listes : normalisés ; codes de nuance : conservés tels quels (ex. « M-NC »)
+            key = normalize_key(e["key"]) if normalize else str(e["key"]).strip().upper()
             if e["family"] not in known_families:
                 raise ValueError(f"{election_id}/{key}: famille inconnue {e['family']!r}")
             if key in out[election_id]:
@@ -67,7 +68,7 @@ def load_list_mappings(path: Path, known_families: set[str]) -> dict[str, dict[s
     if "nuances" in data:
         entries = [{"key": code, **spec} for code, spec in data["nuances"].items()]
         for election_id in data["applies_to"]:
-            add(election_id, entries)
+            add(election_id, entries, normalize=False)
     return out
 
 

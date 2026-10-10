@@ -1,0 +1,120 @@
+# Rattachement des nuances politiques du ministère de l'Intérieur à une famille, commun à tous les scrutins
+# par nuance : législatives, européennes (sauf 2019), régionales, départementales et cantonales.
+# Nuances actuelles : blocs de la circulaire 2026 (EXG, GAU, CENT, DTE, EXD, DIV) ; codes historiques rattachés à la main.
+# Par cohérence avec la présidentielle, La France insoumise est rangée à gauche (le ministère la classe en EXG).
+# Le préfixe « BC- » des binômes départementaux est retiré à l'ingestion ; le préfixe « L » désigne une liste.
+applies_to: [legi-2002-1, legi-2002-2, legi-2007-1, legi-2007-2, legi-2012-1, legi-2012-2, legi-2017-1, legi-2017-2, legi-2022-1, legi-2022-2, legi-2024-1, legi-2024-2, euro-1999-1, euro-2004-1, euro-2009-1, euro-2014-1, euro-2024-1, regi-2004-1, regi-2004-2, regi-2010-1, regi-2010-2, regi-2015-1, regi-2015-2, regi-2021-1, regi-2021-2, dpmt-2015-1, dpmt-2015-2, dpmt-2021-1, dpmt-2021-2, cant-2001-1, cant-2001-2, cant-2004-1, cant-2004-2, cant-2008-1, cant-2008-2, cant-2011-1, cant-2011-2]
+nuances:
+  ALLI: {label: "Alliance centriste", family: centre}
+  AUT: {label: "Autres", family: divers}
+  CEN: {label: "Centristes", family: centre}
+  COM: {label: "Parti communiste français", family: gauche}
+  CPNT: {label: "Chasse, pêche, nature et traditions", family: divers}
+  DIV: {label: "Divers", family: divers}
+  DL: {label: "Démocratie libérale", family: droite}
+  DLF: {label: "Debout la France", family: extreme_droite, to_validate: true}
+  DSV: {label: "Droite souverainiste", family: droite}
+  DTE: {label: "Liste de droite (RPR-DL)", family: droite}
+  DVC: {label: "Divers centre", family: centre}
+  DVD: {label: "Divers droite", family: droite}
+  DVG: {label: "Divers gauche", family: gauche}
+  DXD: {label: "Divers extrême droite", family: extreme_droite}
+  DXG: {label: "Divers extrême gauche", family: extreme_gauche}
+  ECO: {label: "Écologistes (hors Verts/EELV)", family: divers}
+  ENS: {label: "Ensemble (majorité présidentielle)", family: centre}
+  EXD: {label: "Extrême droite", family: extreme_droite}
+  EXG: {label: "Extrême gauche", family: extreme_gauche}
+  FG: {label: "Front de gauche", family: gauche}
+  FI: {label: "La France insoumise", family: gauche}
+  FN: {label: "Front national", family: extreme_droite}
+  FRN: {label: "Front national", family: extreme_droite}
+  GAU: {label: "Liste de gauche (PS)", family: gauche}
+  GJ: {label: "Gilets jaunes", family: divers}
+  HOR: {label: "Horizons", family: centre}
+  LAUT: {label: "Liste autres", family: divers}
+  LCMD: {label: "Liste MoDem (centre)", family: centre, to_validate: true}
+  LCOM: {label: "Liste Parti communiste / Gauche unie", family: gauche}
+  LCOP: {label: "Liste Front de gauche / communiste (2009-2010)", family: gauche, to_validate: true}
+  LCP: {label: "Liste chasse et pêche (2004)", family: divers, to_validate: true}
+  LCR: {label: "Ligue communiste révolutionnaire", family: extreme_gauche}
+  LDD: {label: "Liste divers droite (2004)", family: droite, to_validate: true}
+  LDG: {label: "Liste divers gauche (2004)", family: gauche}
+  LDIV: {label: "Liste divers", family: divers}
+  LDLF: {label: "Liste Debout la France", family: extreme_droite, to_validate: true}
+  LDR: {label: "Liste d'union de la droite (2004)", family: droite}
+  LDSV: {label: "Liste droite souverainiste", family: droite}
+  LDV: {label: "Liste divers (2004-2009)", family: divers}
+  LDVC: {label: "Liste divers centre", family: centre}
+  LDVD: {label: "Liste divers droite", family: droite}
+  LDVG: {label: "Liste divers gauche", family: gauche}
+  LEC: {label: "Liste écologiste indépendante (2004)", family: divers}
+  LECO: {label: "Liste écologiste (hors Verts/EELV)", family: divers}
+  LENS: {label: "Liste Ensemble / Renaissance", family: centre}
+  LEXD: {label: "Liste d'extrême droite", family: extreme_droite}
+  LEXG: {label: "Liste d'extrême gauche", family: extreme_gauche}
+  LFG: {label: "Liste Front de gauche", family: gauche}
+  LFI: {label: "Liste La France insoumise", family: gauche}
+  LFN: {label: "Liste Front national", family: extreme_droite}
+  LGA: {label: "Liste d'union de la gauche (2004)", family: gauche}
+  LLR: {label: "Liste Les Républicains", family: droite}
+  LMAJ: {label: "Liste de la majorité présidentielle", family: droite}
+  LMDM: {label: "Liste MoDem", family: centre}
+  LO: {label: "Lutte ouvrière", family: extreme_gauche}
+  LPC: {label: "Liste Parti communiste", family: gauche}
+  LPS: {label: "Liste Parti socialiste", family: gauche}
+  LR: {label: "Les Républicains", family: droite}
+  LRDG: {label: "Liste radicaux de gauche", family: gauche}
+  LREC: {label: "Liste Reconquête", family: extreme_droite}
+  LREG: {label: "Liste régionaliste", family: regionaliste}
+  LREM: {label: "Liste La République en marche", family: centre}
+  LRG: {label: "Liste radicale de gauche", family: gauche}
+  LRN: {label: "Liste Rassemblement national", family: extreme_droite}
+  LSOC: {label: "Liste Parti socialiste", family: gauche}
+  LUC: {label: "Liste d'union du centre", family: centre}
+  LUCD: {label: "Liste union du centre et de la droite", family: droite, to_validate: true}
+  LUD: {label: "Liste d'union de la droite", family: droite}
+  LUDF: {label: "Liste UDF", family: centre}
+  LUDI: {label: "Liste UDI", family: centre}
+  LUG: {label: "Liste d'union de la gauche", family: gauche}
+  LUGE: {label: "Liste union gauche et écologistes", family: gauche}
+  LUMP: {label: "Liste UMP", family: droite}
+  LVE: {label: "Liste Les Verts (2004)", family: gauche, to_validate: true}
+  LVEC: {label: "Liste Verts / Écologistes", family: gauche}
+  LVEG: {label: "Liste Verts / écologistes (2015)", family: gauche, to_validate: true}
+  LXD: {label: "Liste extrême droite (2004)", family: extreme_droite}
+  LXG: {label: "Liste extrême gauche", family: extreme_gauche}
+  M: {label: "Majorité présidentielle", family: droite}
+  "M-NC": {label: "Majorité présidentielle - Nouveau Centre", family: centre, to_validate: true}
+  MAJ: {label: "Majorité présidentielle", family: droite}
+  MDC: {label: "Mouvement des citoyens", family: gauche}
+  MDM: {label: "MoDem", family: centre}
+  MNA: {label: "Mouvement national", family: extreme_droite}
+  MNR: {label: "Mouvement national républicain", family: extreme_droite}
+  MODM: {label: "MoDem", family: centre}
+  MPF: {label: "Mouvement pour la France", family: droite}
+  NCE: {label: "Nouveau Centre", family: centre}
+  NUP: {label: "Nouvelle union populaire (NUPES)", family: gauche}
+  PG: {label: "Parti de gauche", family: gauche}
+  PREP: {label: "Pôle républicain (code PREP)", family: gauche, to_validate: true}
+  PRG: {label: "Parti radical de gauche", family: gauche}
+  PRV: {label: "Parti radical valoisien", family: centre}
+  RDG: {label: "Radicaux de gauche", family: gauche}
+  REC: {label: "Reconquête", family: extreme_droite}
+  REG: {label: "Régionalistes", family: regionaliste}
+  REM: {label: "La République en marche", family: centre}
+  RN: {label: "Rassemblement national", family: extreme_droite}
+  RPF: {label: "Rassemblement pour la France", family: droite}
+  RPR: {label: "Rassemblement pour la République", family: droite}
+  SOC: {label: "Parti socialiste", family: gauche}
+  UC: {label: "Union du centre", family: centre}
+  UCD: {label: "Union du centre et de la droite", family: droite, to_validate: true}
+  UCG: {label: "Union du centre et de la gauche", family: gauche, to_validate: true}
+  UD: {label: "Union de la droite", family: droite}
+  UDF: {label: "Union pour la démocratie française", family: centre}
+  UDFD: {label: "UDF-Démocrates", family: centre}
+  UDI: {label: "Union des démocrates et indépendants", family: centre}
+  UG: {label: "Union de la gauche (Nouveau Front populaire)", family: gauche}
+  UGE: {label: "Union de la gauche et des écologistes", family: gauche}
+  UMP: {label: "Union pour un mouvement populaire", family: droite}
+  UXD: {label: "Union de l'extrême droite", family: extreme_droite}
+  VEC: {label: "Les Verts / Les Écologistes", family: gauche}
