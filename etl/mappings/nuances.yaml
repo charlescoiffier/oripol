@@ -78,7 +78,7 @@ nuances:
   LUG: {label: "Liste d'union de la gauche", family: gauche}
   LUGE: {label: "Liste union gauche et écologistes", family: gauche}
   LUMP: {label: "Liste UMP", family: droite}
-  LVE: {label: "Liste Les Verts (2004)", family: gauchee}
+  LVE: {label: "Liste Les Verts (2004)", family: gauche}
   LVEC: {label: "Liste Verts / Écologistes", family: gauche}
   LVEG: {label: "Liste Verts / écologistes (2015)", family: gauche}
   LXD: {label: "Liste extrême droite (2004)", family: extreme_droite}
