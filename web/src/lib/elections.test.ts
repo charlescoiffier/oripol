@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultElection, defaultElectionOfType, electionForType, groupByType, shortLabel, siblings, type IndexEntry } from './elections';
+import { defaultElection, menuType, defaultElectionOfType, electionForType, groupByType, shortLabel, siblings, type IndexEntry } from './elections';
 
 const e = (type: string, year: number, round: number): IndexEntry => ({
 	id: `${type}-${year}-${round}`,
@@ -20,6 +20,27 @@ describe('groupByType', () => {
 	it('puts unknown types last without dropping them', () => {
 		const groups = groupByType([...index, e('muni', 2020, 1)]);
 		expect(groups.map((g) => g.type)).toEqual(['pres', 'legi', 'muni']);
+	});
+});
+
+describe('cantonales et départementales', () => {
+	const idx = [e('cant', 2011, 1), e('dpmt', 2015, 1), e('dpmt', 2021, 1), e('cant', 2011, 2), e('muni', 2020, 1), e('euro', 2019, 1), e('regi', 2021, 1), e('legi', 2022, 1), e('pres', 2022, 1)];
+	it('forms a single group, in the requested menu order', () => {
+		const groups = groupByType(idx);
+		expect(groups.map((g) => g.type)).toEqual(['pres', 'euro', 'legi', 'regi', 'dpmt', 'muni']);
+		expect(groups[4].label).toBe('Départementales (et Cantonales)');
+		expect(groups[4].entries.map((x) => x.id)).toEqual(['cant-2011-1', 'cant-2011-2', 'dpmt-2015-1', 'dpmt-2021-1']);
+	});
+	it('chains them in one series', () => {
+		expect(siblings(idx, 'dpmt-2021-1').map((x) => x.id)).toEqual(['cant-2011-1', 'dpmt-2015-1', 'dpmt-2021-1']);
+	});
+	it('maps both types to the same menu entry', () => {
+		expect(menuType('cant')).toBe('dpmt');
+		expect(menuType('pres')).toBe('pres');
+	});
+	it('picks the same year in the merged group when switching type', () => {
+		expect(electionForType(idx, 'dpmt', 'regi-2021-1')).toBe('dpmt-2021-1');
+		expect(electionForType(idx, 'dpmt', null)).toBe('dpmt-2021-1');
 	});
 });
 

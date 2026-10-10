@@ -5,7 +5,7 @@
 	import { app } from '../lib/app-state.svelte';
 	import { NO_DATA_COLOR, SCORE_DOMAIN, scoreColor } from '../lib/color';
 	import { loadDataset, type Dataset } from '../lib/data';
-	import { defaultElection, electionForType, groupByType, shortLabel, siblings } from '../lib/elections';
+	import { defaultElection, electionForType, groupByType, menuType, shortLabel, siblings } from '../lib/elections';
 	import { score } from '../lib/score';
 	import { buildSeries } from '../lib/series';
 	import { planLevelChange } from '../lib/hierarchy';
@@ -80,7 +80,7 @@
 
 	const election = $derived(app.election ? (loaded[app.election] ?? null) : null);
 	const electionGroups = $derived(dataset ? groupByType(dataset.index) : []);
-	const currentType = $derived(dataset?.index.find((e) => e.id === app.election)?.type ?? null);
+	const currentType = $derived(menuType(dataset?.index.find((e) => e.id === app.election)?.type ?? '') || null);
 	const currentEntries = $derived(electionGroups.find((g) => g.type === currentType)?.entries ?? []);
 
 	function changeType(type: string) {

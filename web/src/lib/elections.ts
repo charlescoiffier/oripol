@@ -8,13 +8,15 @@ export interface IndexEntry {
 
 export const TYPE_LABELS: Record<string, string> = {
 	pres: 'Présidentielles',
-	legi: 'Législatives',
 	euro: 'Européennes',
-	muni: 'Municipales',
-	dpmt: 'Départementales',
-	cant: 'Cantonales',
-	regi: 'Régionales'
+	legi: 'Législatives',
+	regi: 'Régionales',
+	dpmt: 'Départementales (et Cantonales)',
+	muni: 'Municipales'
 };
+/** Entrée du menu des types : les cantonales sont les ancêtres des départementales, même élection. */
+export const menuType = (type: string): string => (type === 'cant' ? 'dpmt' : type);
+
 const TYPE_ORDER = Object.keys(TYPE_LABELS);
 
 const rank = (type: string) => {
@@ -33,7 +35,7 @@ export interface ElectionGroup {
 /** Élections regroupées par type (présidentielles d'abord), de la plus ancienne à la plus récente. */
 export function groupByType(index: IndexEntry[]): ElectionGroup[] {
 	const groups = new Map<string, IndexEntry[]>();
-	for (const e of index) groups.set(e.type, [...(groups.get(e.type) ?? []), e]);
+	for (const e of index) groups.set(menuType(e.type), [...(groups.get(menuType(e.type)) ?? []), e]);
 	return [...groups.entries()]
 		.sort(([a], [b]) => rank(a) - rank(b))
 		.map(([type, entries]) => ({ type, label: TYPE_LABELS[type] ?? type, entries: entries.sort(chronological) }));
@@ -43,7 +45,7 @@ export function groupByType(index: IndexEntry[]): ElectionGroup[] {
 export function siblings(index: IndexEntry[], id: string): IndexEntry[] {
 	const current = index.find((e) => e.id === id);
 	if (!current) return [];
-	return index.filter((e) => e.type === current.type && e.round === current.round).sort(chronological);
+	return index.filter((e) => menuType(e.type) === menuType(current.type) && e.round === current.round).sort(chronological);
 }
 
 /** Élection ouverte par défaut : le dernier 1er tour du premier type. */
@@ -67,6 +69,6 @@ export function shortLabel(e: IndexEntry): string {
 /** Élection à ouvrir quand on change de type : même année et même tour si possible, sinon la plus récente. */
 export function electionForType(index: IndexEntry[], type: string, currentId: string | null): string | null {
 	const current = index.find((e) => e.id === currentId);
-	const same = current && index.find((e) => e.type === type && e.year === current.year && e.round === current.round);
+	const same = current && index.find((e) => menuType(e.type) === type && e.year === current.year && e.round === current.round);
 	return same?.id ?? defaultElectionOfType(index, type);
 }
