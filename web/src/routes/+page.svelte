@@ -159,7 +159,10 @@
 		if (app.level === 'pays') {
 			const fr = election.territories.FR;
 			const c = fr ? colorOfResult(fr, 'FR') : NO_DATA_COLOR;
-			for (const id of Object.keys(election.territories)) if (id.startsWith(prefix)) out[id] = c;
+			// un seul territoire : tous les départements, même ceux sans résultat à ce scrutin, prennent la couleur du pays
+			for (const id of [...Object.keys(election.territories), ...Object.keys(ds.names)]) {
+				if (id.startsWith(prefix)) out[id] = c;
+			}
 			return out;
 		}
 		for (const [id, r] of Object.entries(election.territories)) {
