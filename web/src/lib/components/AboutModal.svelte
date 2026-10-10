@@ -63,7 +63,7 @@
 					<strong>Municipales :</strong> seules les communes d'une certaine taille ont des étiquettes politiques
 					(nuances) : environ 3 500 habitants et plus en 2008 et en 2026, environ 1 000 habitants et plus en 2014 et
 					en 2020. Les voix sans étiquette sont affichées « Non classé » et ne comptent pas dans l'orientation, qui
-					n'est calculée que si au moins la moitié des voix sont étiquetées. Les départements, les régions et le pays
+					n'est calculée que si au moins 30 % des voix sont étiquetées. Les départements, les régions et le pays
 					reflètent donc surtout les communes étiquetées.
 				</li>
 				<li>Les comparaisons se font entre scrutins de même nature.</li>

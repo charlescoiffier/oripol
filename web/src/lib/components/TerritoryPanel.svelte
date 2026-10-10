@@ -48,6 +48,7 @@
 	// l'animation (points qui apparaissent en 1 s) ne se joue que lorsque le territoire ou la série change,
 	// pas quand on déplace un curseur du classement
 	let lastAnimated = '';
+	let revealTimer: ReturnType<typeof setInterval> | undefined;
 	const hasAbsent = $derived(points.some((p) => p.status === 'absent'));
 	const hasUnscored = $derived(points.some((p) => p.status === 'unscored'));
 
@@ -62,6 +63,7 @@
 		const ro = new ResizeObserver(resize);
 		ro.observe(orientationEl);
 		return () => {
+			clearInterval(revealTimer);
 			ro.disconnect();
 			orientationChart?.dispose();
 			sharesChart?.dispose();
@@ -78,13 +80,12 @@
 		// axe symétrique autour de la ligne médiane : gauche à gauche, droite à droite
 		const scores = points.flatMap((p) => (p.status === 'ok' && p.score !== null ? [Math.abs(p.score)] : []));
 		const half = Math.max(0.3, ...scores) * 1.25;
-		const marks = (status: 'absent' | 'unscored') =>
-			points.flatMap((p, i) => (p.status === status ? [[0, i]] : []));
-		orientationChart?.setOption(
+		const marks = (status: 'absent' | 'unscored', visible: number) =>
+			points.flatMap((p, i) => (i < visible && p.status === status ? [[0, i]] : []));
+		// option du graphique avec seulement les `visible` premiers points (apparition progressive)
+		const orientationOption = (visible: number) => (
 			{
-				animation: animate,
-				animationDuration: 1000,
-				animationEasing: 'linear',
+				animation: false, // l'apparition progressive est pilotée à la main (voir plus bas)
 				grid: { left: 40, right: 14, top: 8, bottom: 8 },
 				tooltip: {
 					...TOOLTIP,
@@ -114,7 +115,7 @@
 						symbolSize: 8,
 						itemStyle: { color: '#db4c3f' },
 						lineStyle: { color: '#db4c3f', width: 2 },
-						data: points.map((p) => (p.status === 'ok' && p.score !== null ? Number(p.score.toFixed(3)) : null)),
+						data: points.map((p, i) => (i < visible && p.status === 'ok' && p.score !== null ? Number(p.score.toFixed(3)) : null)),
 						markLine: {
 							silent: true,
 							symbol: 'none',
@@ -131,7 +132,7 @@
 						symbolSize: 9,
 						itemStyle: { color: '#999', borderColor: '#999', borderWidth: 1.5 },
 						z: 5,
-						data: marks('absent')
+						data: marks('absent', visible)
 					},
 					{
 						// résultat sans orientation calculable (peu de voix étiquetées) : cercle gris creux
@@ -141,12 +142,28 @@
 						symbolSize: 8,
 						itemStyle: { color: '#fff', borderColor: '#999', borderWidth: 1.5 },
 						z: 5,
-						data: marks('unscored')
+						data: marks('unscored', visible)
 					}
 				]
-			},
-			true
+			}
 		);
+
+		// ECharts ne rejoue pas son animation d'entrée quand on remplace les données d'un graphique déjà affiché :
+		// on révèle donc les points un à un, en environ 1 seconde
+		clearInterval(revealTimer);
+		if (animate && points.length > 1) {
+			let shown = 0;
+			const step = Math.max(40, Math.round(1000 / points.length));
+			const tick = () => {
+				shown += 1;
+				orientationChart?.setOption(orientationOption(shown), true);
+				if (shown >= points.length) clearInterval(revealTimer);
+			};
+			tick();
+			revealTimer = setInterval(tick, step);
+		} else {
+			orientationChart?.setOption(orientationOption(points.length), true);
+		}
 		sharesChart?.setOption(
 			{
 				grid: { left: 36, right: 8, top: 10, bottom: 22 },
@@ -170,7 +187,7 @@
 						// emplacement d'un scrutin sans résultat : barre vide en pointillés
 						name: 'Pas de résultat',
 						type: 'bar' as const,
-						stack: 'absent',
+						stack: 'parts',
 						itemStyle: { color: '#f6f6f6', borderColor: '#bbb', borderType: 'dashed' as const, borderWidth: 1 },
 						data: points.map((p) => (p.status === 'absent' ? 1 : 0))
 					},

@@ -30,7 +30,7 @@ export function familyShares(
 }
 
 /** Part minimale de voix étiquetées pour calculer une orientation (sinon : pas de score). */
-export const MIN_CLASSIFIED = 0.5;
+export const MIN_CLASSIFIED = 0.3;
 
 const inBase = (f: Family) => f.inBase !== false;
 

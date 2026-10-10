@@ -83,9 +83,11 @@ describe('unclassified votes (municipal elections)', () => {
 		expect(score(result({ a: 45, b: 15, n: 40 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(-0.5);
 	});
 
-	it('gives no score when fewer than half of the votes are classified', () => {
-		expect(MIN_CLASSIFIED).toBe(0.5);
-		expect(score(result({ a: 20, b: 20, n: 60 }, 100), lists, families, NO_OVERRIDES)).toBeNull();
+	it('gives no score when fewer than 30 % of the votes are classified', () => {
+		expect(MIN_CLASSIFIED).toBe(0.3);
+		expect(score(result({ a: 10, b: 10, n: 80 }, 100), lists, families, NO_OVERRIDES)).toBeNull();
+		// 40 % de voix étiquetées : au-dessus du seuil, l'orientation est calculée sur cette base
+		expect(score(result({ a: 30, b: 10, n: 60 }, 100), lists, families, NO_OVERRIDES)).toBeCloseTo(-0.5);
 		expect(score(result({ n: 100 }, 100), lists, families, NO_OVERRIDES)).toBeNull();
 	});
 
