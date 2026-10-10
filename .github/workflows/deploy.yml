@@ -28,10 +28,25 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      - name: Installer tippecanoe
+      # la version d'Ubuntu (2.49) produit des tuiles sans communes : on compile la 2.79.0 utilisée en local
+      - name: Cache tippecanoe
+        id: tippecanoe-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/tippecanoe-bin
+          key: tippecanoe-2.79.0
+
+      - name: Compiler tippecanoe
+        if: steps.tippecanoe-cache.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update
-          sudo apt-get install -y tippecanoe
+          sudo apt-get install -y build-essential libsqlite3-dev zlib1g-dev
+          git clone --depth 1 --branch 2.79.0 https://github.com/felt/tippecanoe.git /tmp/tippecanoe
+          make -C /tmp/tippecanoe -j"$(nproc)"
+          make -C /tmp/tippecanoe install PREFIX="$HOME/tippecanoe-bin"
+
+      - name: Ajouter tippecanoe au PATH
+        run: echo "$HOME/tippecanoe-bin/bin" >> "$GITHUB_PATH"
 
       # sources, résultats JSON et tuiles : régénérés à chaque déploiement (non versionnés)
       - name: Générer les données
