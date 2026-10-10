@@ -220,12 +220,25 @@
 	}
 
 	async function copyLink() {
-		try {
-			await navigator.clipboard.writeText(location.href);
-			exportNote = 'Lien copié dans le presse-papiers.';
-		} catch {
-			exportNote = 'Copie impossible : utilisez l’adresse de la barre du navigateur.';
-		}
+		const copied = await navigator.clipboard?.writeText(location.href).then(
+			() => true,
+			() => false
+		);
+		// repli pour les contextes où l'API moderne est refusée
+		const fallback = () => {
+			const t = document.createElement('textarea');
+			t.value = location.href;
+			t.style.cssText = 'position:fixed;opacity:0';
+			document.body.append(t);
+			t.select();
+			const ok = document.execCommand('copy');
+			t.remove();
+			return ok;
+		};
+		exportNote =
+			copied || fallback()
+				? 'Lien copié dans le presse-papiers.'
+				: 'Copie impossible : utilisez l’adresse de la barre du navigateur.';
 		setTimeout(() => (exportNote = null), 2500);
 	}
 
@@ -397,11 +410,11 @@
 							{exporting ? 'Préparation…' : 'PDF A4'}
 						</button>
 					</div>
-					{#if exportNote}<p class="note" role="status">{exportNote}</p>{/if}
+					<p class="note" role="status">{exportNote ?? ''}</p>
 				</section>
 
 				<div class="about">
-					<button class="btn" type="button" onclick={() => (aboutOpen = true)}>À propos</button>
+					<button class="help" type="button" aria-label="À propos d’Oripol" title="À propos" onclick={() => (aboutOpen = true)}>?</button>
 				</div>
 			</div>
 		</aside>
@@ -483,7 +496,7 @@
 	}
 	.about {
 		margin-top: auto;
-		padding-top: 18px;
+		padding-top: 6px;
 	}
 	.right .inner {
 		width: var(--right);
@@ -607,10 +620,35 @@
 	.seg button:disabled {
 		opacity: 0.6;
 	}
+	/* emplacement réservé (deux lignes) : le message temporaire ne fait pas sauter la mise en page */
 	.note {
+		min-height: 2.7em;
 		margin: 6px 0 0;
 		font-size: 11px;
+		line-height: 1.35;
 		color: var(--muted);
+	}
+	/* la rangée coupe son débordement : le contour du focus doit rester à l'intérieur */
+	.seg button:focus-visible {
+		outline-offset: -2px;
+	}
+	.help {
+		display: grid;
+		place-items: center;
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		border: 1px solid #ddd;
+		border-radius: 50%;
+		background: #fff;
+		color: var(--muted);
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1;
+	}
+	.help:hover {
+		background: #f4f4f4;
+		color: var(--text);
 	}
 	.nodata {
 		display: flex;
