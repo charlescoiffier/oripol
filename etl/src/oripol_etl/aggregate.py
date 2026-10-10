@@ -32,3 +32,28 @@ def build_payload(
         for row in v.group_by([key.alias("k"), "list_key"]).agg(pl.col("voix").sum()).iter_rows(named=True):
             out[tid(row["k"])]["voix"][row["list_key"]] = row["voix"]
     return out
+
+
+MAX_PEOPLE = 3  # au-delà, une commune n'affiche pas de noms pour une nuance
+
+
+def build_names(election_id: str, names: pl.DataFrame, geo: pl.DataFrame) -> dict[str, dict[str, str]]:
+    """Nom du candidat ou de la tête de liste par territoire et par nuance.
+
+    Une commune liste ses personnes ; un département, une région ou le pays n'a de nom que s'il n'y en a qu'un seul
+    en dessous (par exemple la tête de liste régionale d'une nuance dans toute sa région)."""
+    n = names.filter(pl.col("election_id") == election_id).join(geo, on="code", how="inner")
+    out: dict[str, dict[str, str]] = {}
+    com = n.filter(pl.col("dep") != "ZZ")
+    for code, key, people in com.group_by(["code", "list_key"]).agg(pl.col("person").sort().unique()).iter_rows():
+        if len(people) <= MAX_PEOPLE:
+            out.setdefault(f"COM-{code}", {})[key] = " / ".join(people)
+    for prefix, col, frame in (("DEP", "dep", n), ("REG", "reg", n.filter(pl.col("reg").is_not_null())), ("FR", None, n)):
+        key_col = pl.col(col) if col else pl.lit("")
+        grouped = frame.group_by([key_col.alias("k"), "list_key"]).agg(
+            pl.col("person").n_unique().alias("n"), pl.col("person").first().alias("person")
+        )
+        for k, key, count, person in grouped.iter_rows():
+            if count == 1:
+                out.setdefault(f"{prefix}-{k}" if col else "FR", {})[key] = person
+    return out

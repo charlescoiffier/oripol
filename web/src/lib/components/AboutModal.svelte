@@ -22,8 +22,12 @@
 				<li>
 					<strong>Classique</strong> : chaque territoire prend la couleur de la famille de la liste ou du candidat
 					arrivé en tête (les voix sans étiquette ne comptent pas). Le panneau de droite détaille les listes, avec
-					leur nombre de voix, leur pourcentage des exprimés et l'abstention. Le nom du candidat n'est connu que
-					pour les présidentielles ; aux autres scrutins, les voix sont regroupées par nuance politique.
+					leur nombre de voix, leur pourcentage des exprimés et l'abstention. Le nom du candidat est affiché
+					pour les présidentielles, et pour les législatives, régionales et municipales dans les communes (ou, pour
+					les régionales, dans une région entière) quand une seule personne porte la nuance ; si plusieurs listes
+					partagent une même nuance dans une commune, leurs noms sont séparés par « / ». Pour les autres cas
+					(européennes, départementales, ensemble d'un département ou du pays pour les législatives et les
+					municipales), les voix sont regroupées par nuance politique.
 				</li>
 				<li>
 					<strong>Évolution</strong> : la carte est colorée selon l'orientation moyenne des votes (de la gauche à la
@@ -43,8 +47,9 @@
 			<p>
 				Chaque famille a une position sur un axe de −2 (extrême gauche) à +2 (extrême droite). L'<strong>orientation
 				moyenne</strong> d'un territoire est la position moyenne de ses suffrages : la somme, sur les familles placées
-				sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Les familles hors axe diluent
-				cette moyenne mais apparaissent dans la répartition des votes. Les signes négatifs ou positifs n'ont aucune
+				sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Les familles divers et
+				régionalistes sont placées par défaut à 0, au milieu de l'axe : leurs voix pèsent comme celles du centre et
+				apparaissent dans la répartition des votes. Les signes négatifs ou positifs n'ont aucune
 				valeur de jugement : ils servent seulement à orienter l'axe. Dans les graphiques, la moyenne est traduite en
 				nuance : gauche, centre gauche, centre, centre droit, droite.
 			</p>

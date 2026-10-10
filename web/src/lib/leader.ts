@@ -5,6 +5,8 @@ export interface ResultRow {
 	listId: string;
 	label: string;
 	family: FamilyId | undefined;
+	/** Candidat ou tête de liste, quand le fichier source le donne. */
+	person?: string;
 	voix: number;
 	/** Part des suffrages exprimés. */
 	share: number;
@@ -28,13 +30,19 @@ export function leader(
 }
 
 /** Résultats d'un territoire, de la liste la plus votée à la moins votée. */
-export function resultRows(result: TerritoryResult, lists: Record<string, ListInfo>, c: Classification): ResultRow[] {
+export function resultRows(
+	result: TerritoryResult,
+	lists: Record<string, ListInfo>,
+	c: Classification,
+	people: Record<string, string> = {}
+): ResultRow[] {
 	return Object.entries(result.voix)
 		.filter(([, voix]) => voix > 0)
 		.map(([listId, voix]) => ({
 			listId,
 			label: lists[listId]?.label ?? listId,
 			family: effectiveFamily(listId, lists, c),
+			person: people[listId],
 			voix,
 			share: result.exprimes > 0 ? voix / result.exprimes : 0
 		}))

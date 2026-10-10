@@ -28,18 +28,40 @@ def _label(election_id: str) -> str:
     return f"{LABELS[kind]} {year} – {'1er' if rnd == 1 else '2d'} tour"
 
 
+def pack_people(by_territory: dict[str, dict[str, str]]) -> dict:
+    """Format compact : table de noms dédupliquée, puis par territoire `[nuance, indice du nom, …]`."""
+    table: dict[str, int] = {}
+    packed: dict[str, list] = {}
+    for tid, by_key in by_territory.items():
+        flat: list = []
+        for key, person in by_key.items():
+            flat += [key, table.setdefault(person, len(table))]
+        packed[tid] = flat
+    return {"names": list(table), "t": packed}
+
+
 def write_site_data(
     out: Path,
     families: list[Family],
     mappings: dict[str, dict[str, ListMapping]],
     payloads: dict[str, dict],
     names: dict[str, str],
+    people: dict[str, dict[str, dict[str, str]]] | None = None,
 ) -> None:
+    """`people` : par élection, territoire → nuance → nom du candidat ou de la tête de liste (fichiers à part)."""
+    people = people or {}
     (out / "elections").mkdir(parents=True, exist_ok=True)
     ids = sorted(payloads, key=lambda e: _parse(e)[1:])
     index = {
         "elections": [
-            {"id": e, "type": _parse(e)[0], "year": _parse(e)[1], "round": _parse(e)[2], "label": _label(e)}
+            {
+                "id": e,
+                "type": _parse(e)[0],
+                "year": _parse(e)[1],
+                "round": _parse(e)[2],
+                "label": _label(e),
+                **({"people": True} if people.get(e) else {}),
+            }
             for e in ids
         ]
     }
@@ -59,6 +81,12 @@ def write_site_data(
     names_path = out / "names.json"
     existing = json.loads(names_path.read_text(encoding="utf-8")) if names_path.exists() else {}
     names_path.write_text(json.dumps({**existing, **names}, ensure_ascii=False), encoding="utf-8")
+    (out / "people").mkdir(exist_ok=True)
+    for e, by_territory in people.items():
+        if by_territory:
+            (out / "people" / f"{e}.json").write_text(
+                json.dumps(pack_people(by_territory), ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+            )
     for e in ids:
         keys = sorted({k for r in payloads[e].values() for k in r["voix"]})
         territories = {

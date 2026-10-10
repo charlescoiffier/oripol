@@ -4,6 +4,8 @@ export interface IndexEntry {
 	year: number;
 	round: number;
 	label: string;
+	/** Un fichier des candidats ou têtes de liste existe pour cette élection. */
+	people?: boolean;
 }
 
 export const TYPE_LABELS: Record<string, string> = {

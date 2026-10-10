@@ -4,7 +4,7 @@
 	import { BASE } from '../lib/paths';
 	import { app } from '../lib/app-state.svelte';
 	import { NO_DATA_COLOR, SCORE_DOMAIN, scoreColor } from '../lib/color';
-	import { loadDataset, type Dataset } from '../lib/data';
+	import { loadDataset, type Dataset, type People } from '../lib/data';
 	import { defaultElection, electionForType, groupByType, menuType, shortLabel, siblings } from '../lib/elections';
 	import { composeA4, composePng, fileName, imageBlock, resultsBlock, savePdf, savePng, type Legend } from '../lib/export';
 	import { leader, resultRows } from '../lib/leader';
@@ -26,6 +26,7 @@
 
 	let dataset = $state<Dataset | null>(null);
 	let loaded = $state<Record<string, ElectionData>>({}); // résultats chargés à la demande
+	let peopleByElection = $state<Record<string, People>>({}); // candidats et têtes de liste, chargés à la demande
 	let loadError = $state<string | null>(null);
 	let error = $state<string | null>(null);
 	let leftOpen = $state(true);
@@ -97,6 +98,17 @@
 		for (const s of siblings(dataset.index, app.election)) ensure(s.id);
 	});
 
+	// noms des candidats : seulement utiles au mode classique, quand le scrutin en dispose
+	$effect(() => {
+		const id = app.election;
+		if (!dataset || !id || app.mode !== 'classique' || peopleByElection[id]) return;
+		if (!dataset.index.find((e) => e.id === id)?.people) return;
+		dataset.loadPeople(id).then(
+			(p) => (peopleByElection[id] = p),
+			() => {} // sans les noms, la fiche garde les libellés de nuance
+		);
+	});
+
 	const election = $derived(app.election ? (loaded[app.election] ?? null) : null);
 	const electionGroups = $derived(dataset ? groupByType(dataset.index) : []);
 	const currentType = $derived(menuType(dataset?.index.find((e) => e.id === app.election)?.type ?? '') || null);
@@ -159,6 +171,7 @@
 			? buildSeries(siblings(dataset.index, app.election), loaded, app.territory, dataset.families, app.classification)
 			: []
 	);
+	const territoryPeople = $derived(app.election && app.territory ? peopleByElection[app.election]?.[app.territory] : undefined);
 	const currentResult = $derived(app.territory && election ? election.territories[app.territory] : undefined);
 	const electionLabel = $derived(dataset?.index.find((e) => e.id === app.election)?.label ?? '');
 	const legendFamilies = $derived(families.filter((f) => f.inBase !== false));
@@ -266,7 +279,7 @@
 			const blocks: HTMLCanvasElement[] = [];
 			if (app.territory && territoryName) {
 				if (app.mode === 'classique' && ids.includes('results') && currentResult) {
-					const rows = resultRows(currentResult, election?.lists ?? {}, app.classification);
+					const rows = resultRows(currentResult, election?.lists ?? {}, app.classification, territoryPeople);
 					const colorOf = (f: string | undefined) => families.find((x) => x.id === f)?.color ?? '#c9c9c9';
 					blocks.push(resultsBlock(electionLabel, currentResult, rows, colorOf));
 				}
@@ -443,7 +456,7 @@
 					</header>
 				{/if}
 				{#if territoryName && app.mode === 'classique'}
-					<ResultsPanel {electionLabel} result={currentResult} lists={election?.lists ?? {}} {families} classification={app.classification} />
+					<ResultsPanel {electionLabel} people={territoryPeople} result={currentResult} lists={election?.lists ?? {}} {families} classification={app.classification} />
 				{:else if territoryName}
 					<TerritoryPanel bind:this={panelRef} {points} {families} territoryName={territoryName ?? ''} />
 				{:else}

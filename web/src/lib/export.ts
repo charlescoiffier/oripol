@@ -198,7 +198,7 @@ export function resultsBlock(
 		ctx.textAlign = 'left';
 		y += 40;
 	};
-	for (const r of shown) draw(r.label, colorOf(r.family), r.voix, r.share);
+	for (const r of shown) draw(r.person ? `${r.person} · ${r.label}` : r.label, colorOf(r.family), r.voix, r.share);
 	if (rest.length) {
 		draw(
 			`Autres (${rest.length} listes)`,

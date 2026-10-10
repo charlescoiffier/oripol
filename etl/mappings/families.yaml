@@ -4,6 +4,6 @@ families:
   - {id: centre, label: "Centre", position: 0, color: "#e0a800"}
   - {id: droite, label: "Droite", position: 1, color: "#3a78c2"}
   - {id: extreme_droite, label: "Extrême droite", position: 2, color: "#1b2a49"}
-  - {id: divers, label: "Divers", position: null, color: "#9b7bb8"}
-  - {id: regionaliste, label: "Régionalistes", position: null, color: "#5b8c5a"}
+  - {id: divers, label: "Divers", position: 0, color: "#9b7bb8"}
+  - {id: regionaliste, label: "Régionalistes", position: 0, color: "#5b8c5a"}
   - {id: non_classe, label: "Non classé (sans étiquette)", position: null, color: "#c9c9c9", in_base: false}

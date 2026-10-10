@@ -28,7 +28,7 @@ Le classement des candidats par famille politique est proposé par défaut, mais
 
 ## Utiliser la carte
 
-0. Choisir le **mode** sous le titre : **Classique** (chaque territoire prend la couleur de la famille de la liste arrivée en tête ; le panneau de droite liste les candidats ou nuances avec voix, pourcentages et abstention) ou **Évolution** (orientation moyenne des votes et trajectoire du territoire).
+0. Choisir le **mode** sous le titre : **Classique** (chaque territoire prend la couleur de la famille de la liste arrivée en tête ; le panneau de droite liste les candidats ou nuances avec voix, pourcentages et abstention ; le nom du candidat ou de la tête de liste est indiqué quand les données le permettent : présidentielles, et législatives, régionales et municipales à l'échelle d'une commune ou d'une région) ou **Évolution** (orientation moyenne des votes et trajectoire du territoire).
 1. Choisir un **type d'élection** (présidentielles, européennes, législatives, régionales, départementales et cantonales, municipales), puis l'**élection** précise dans le second menu, dans le panneau de gauche. Changer de type garde la même année quand elle existe.
 2. Choisir un **niveau** : Pays, Régions, Départements ou Communes. Au niveau Communes, il faut zoomer pour distinguer les communes.
 3. Cliquer sur un territoire (il est entouré d'un trait fin), ou le chercher dans la barre « Choix du territoire » du panneau de droite : la liste se réduit pendant la frappe. Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus. Un double clic sur un territoire zoome sur son emprise.
@@ -44,7 +44,7 @@ Les territoires d'outre-mer sont placés dans la carte elle-même, en bas à gau
 
 - Chaque candidat (présidentielles) ou chaque nuance politique du ministère de l'Intérieur (législatives) est rattaché à une famille : extrême gauche, gauche, centre, droite, extrême droite, divers, régionalistes. Les écologistes (EELV et prédécesseurs) sont classés à gauche par défaut.
 - Chaque famille occupe une position sur un axe de `-2` (extrême gauche) à `+2` (extrême droite). Les signes servent seulement à orienter l'axe, ils n'ont aucune valeur de jugement.
-- L'**orientation moyenne** d'un territoire (son « score ») est la position moyenne de ses suffrages : la somme, sur les familles placées sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Dans les graphiques, elle est traduite en nuance : gauche, centre gauche, centre, centre droit, droite. Les familles hors axe (divers, régionalistes) diluent le score mais apparaissent dans la répartition des votes.
+- L'**orientation moyenne** d'un territoire (son « score ») est la position moyenne de ses suffrages : la somme, sur les familles placées sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Dans les graphiques, elle est traduite en nuance : gauche, centre gauche, centre, centre droit, droite. Les familles divers et régionalistes sont placées par défaut à `0`, au milieu de l'axe : leurs voix pèsent dans la moyenne comme celles du centre. Elles apparaissent aussi dans la répartition des votes.
 - La couleur de la carte sature à `±0,6` et monte vite aux faibles écarts : un territoire fortement orienté n'a pas besoin d'atteindre `±2`, et un territoire peu orienté reste nettement coloré. Un territoire sans donnée est gris foncé.
 
 ## Partager et exporter

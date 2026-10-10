@@ -40,6 +40,10 @@ describe('resultRows', () => {
 		expect(rows.map((x) => x.listId)).toEqual(['e.B', 'e.A', 'e.NC']);
 		expect(rows[0]).toMatchObject({ label: 'Bob (LR)', family: 'droite', voix: 45, share: 0.45 });
 	});
+	it('attaches the candidate name when known', () => {
+		const rows = resultRows(r({ 'e.A': 30, 'e.B': 45 }), lists, none, { 'e.B': 'Bob DUPONT' });
+		expect(rows.map((x) => x.person)).toEqual(['Bob DUPONT', undefined]);
+	});
 	it('drops lists without votes', () => {
 		expect(resultRows(r({ 'e.A': 0, 'e.B': 10 }, 10), lists, none).map((x) => x.listId)).toEqual(['e.B']);
 	});

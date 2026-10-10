@@ -3,12 +3,12 @@ from __future__ import annotations
 import polars as pl
 
 from . import config as c
-from .aggregate import build_payload
+from .aggregate import build_names, build_payload
 from .cog import build_resolver
 from .export import write_parents, write_site_data
 from .families import load_all_mappings, load_families
 from .geo import build_geo
-from .ministry import reconcile_unclassified, to_commune_tables
+from .ministry import reconcile_unclassified, to_commune_names, to_commune_tables
 from .validate import validate, validate_coverage
 
 
@@ -29,7 +29,9 @@ def run() -> None:
 
     families = load_families(c.FAMILIES)
     mappings = load_all_mappings(c.MAPPINGS, {f.id for f in families})
-    participation, votes = to_commune_tables(_table(c.GENERAL_FILE), _table(c.CANDIDATES_FILE), c.COLUMNS, resolver)
+    general, candidates = _table(c.GENERAL_FILE), _table(c.CANDIDATES_FILE)
+    participation, votes = to_commune_tables(general, candidates, c.COLUMNS, resolver)
+    person_rows = to_commune_names(general, candidates, c.COLUMNS, resolver)
     votes = reconcile_unclassified(participation, votes, types={"muni"})
     geo = build_geo(communes, comer_communes, participation["code"].unique().to_list())
 
@@ -42,12 +44,13 @@ def run() -> None:
         e: build_payload(e, participation, votes, geo)
         for e in sorted(participation["election_id"].unique().to_list())
     }
+    people = {e: build_names(e, person_rows, geo) for e in payloads}
     comer = _csv(c.COG_COMER)
     names = {"DEP-ZZ": "Français établis hors de France"}
     for code, label in zip(comer["comer"], comer["libelle"]):
         names[f"DEP-{code}"] = label
         names[f"REG-{code}"] = label
-    write_site_data(c.OUT, families, mappings, payloads, names=names)
+    write_site_data(c.OUT, families, mappings, payloads, names=names, people=people)
     write_parents(c.OUT, geo)
     print(f"{len(payloads)} élections, {geo.height} communes → {c.OUT}")
 

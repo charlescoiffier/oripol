@@ -8,17 +8,20 @@
 		result,
 		lists,
 		families,
-		classification
+		classification,
+		people = {}
 	}: {
 		electionLabel: string;
 		result: TerritoryResult | null | undefined;
 		lists: Record<string, ListInfo>;
 		families: Family[];
 		classification: Classification;
+		/** Candidats ou têtes de liste du territoire (clés `<élection>.<liste>`), quand ils sont connus. */
+		people?: Record<string, string>;
 	} = $props();
 
 	const colorOf = (id: string | undefined) => families.find((f) => f.id === id)?.color ?? '#c9c9c9';
-	const rows = $derived(result ? resultRows(result, lists, classification) : []);
+	const rows = $derived(result ? resultRows(result, lists, classification, people) : []);
 	const lead = $derived(result ? leader(result, lists, families, classification) : null);
 	const leadFamily = $derived(families.find((f) => f.id === lead?.family));
 	const maxShare = $derived(Math.max(0.01, ...rows.map((r) => r.share)));
@@ -37,7 +40,7 @@
 		<p class="lead">
 			{#if leadFamily && lead}
 				<i style="background:{leadFamily.color}"></i>Couleur sur la carte : {leadFamily.label.toLowerCase()}, d'après
-				« {lists[lead.listId]?.label ?? lead.listId} » (les voix sans étiquette ne comptent pas).
+				« {people[lead.listId] ?? lists[lead.listId]?.label ?? lead.listId} » (les voix sans étiquette ne comptent pas).
 			{:else}
 				Aucune liste étiquetée : territoire en gris sur la carte.
 			{/if}
@@ -50,7 +53,14 @@
 				{#each rows as r (r.listId)}
 					<tr>
 						<td>
-							<span class="name"><i style="background:{colorOf(r.family)}"></i>{r.label}</span>
+							<span class="name">
+								<i style="background:{colorOf(r.family)}"></i>
+								{#if r.person}
+									<span class="who">{r.person}<small>{r.label}</small></span>
+								{:else}
+									{r.label}
+								{/if}
+							</span>
 							<span class="bar" style="width:{(r.share / maxShare) * 100}%; background:{colorOf(r.family)}"></span>
 						</td>
 						<td class="num">{formatCount(r.voix)}</td>
@@ -119,6 +129,15 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
+	}
+	.who {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.25;
+	}
+	.who small {
+		font-size: 10.5px;
+		color: var(--muted);
 	}
 	.name i {
 		flex: none;
