@@ -52,7 +52,7 @@ export function statusLine(p: SeriesPoint): string | null {
 			: 'Pas de résultat pour ce territoire';
 	}
 	if (p.status === 'unscored') {
-		return `Orientation non calculée : seulement ${formatPercent(p.classified)} des voix ont une étiquette politique`;
+		return `Orientation moyenne non calculée : seulement ${formatPercent(p.classified)} des voix ont une étiquette politique`;
 	}
 	return null;
 }

@@ -1,6 +1,6 @@
 # Oripol
 
-Une application web qui montre comment un territoire français (commune, département, région, pays) se déplace politiquement d'une élection à l'autre, à partir des résultats officiels.
+Représentation des dynamiques de vote des élections françaises : une application web qui montre comment un territoire français (commune, département, région, pays) se déplace politiquement d'une élection à l'autre, à partir des résultats officiels.
 
 **Lancer l'application : `./start.sh`**
 
@@ -31,15 +31,15 @@ Le classement des candidats par famille politique est proposé par défaut, mais
 
 Quand on change de niveau, la sélection suit : en passant à un niveau supérieur (par exemple d'une commune à son département), le territoire parent est sélectionné et la carte zoome dessus ; en passant à un niveau inférieur, le territoire reste affiché dans la fiche et la carte zoome sur son emprise pour montrer ses subdivisions. « Pays » revient à la vue d'ensemble à chaque clic.
 
-Dans la fiche, les années sont empilées (la plus ancienne en haut) et la courbe se place de part et d'autre de la ligne médiane : la gauche à gauche, la droite à droite. Chaque scrutin comparable garde sa date : une croix grise sur la ligne médiane (et une barre en pointillés dans la répartition) signale un scrutin sans résultat pour ce territoire, par exemple une élection pliée au premier tour ; un cercle gris creux signale une orientation non calculée faute de voix étiquetées (municipales). Les points apparaissent progressivement quand on change de territoire. L'orientation est exprimée par une nuance : gauche, centre gauche, centre, centre droit, droite. Un clic dans la mer quitte la sélection.
+Dans la fiche, les années sont empilées (la plus ancienne en haut) et la courbe se place de part et d'autre de la ligne médiane : la gauche à gauche, la droite à droite. Chaque scrutin comparable garde sa date : une croix grise sur la ligne médiane (et une barre en pointillés dans la répartition) signale un scrutin sans résultat pour ce territoire, par exemple une élection pliée au premier tour ; un cercle gris creux signale une orientation moyenne non calculée faute de voix étiquetées (municipales). Les points apparaissent progressivement quand on change de territoire. L'orientation est exprimée par une nuance : gauche, centre gauche, centre, centre droit, droite. Un clic dans la mer quitte la sélection.
 
 Les territoires d'outre-mer sont placés dans la carte elle-même, en bas à gauche de la métropole, chacun dans son cadre : Guadeloupe, Martinique, Guyane, La Réunion, Mayotte, Saint-Pierre-et-Miquelon, Saint-Barthélemy, Saint-Martin, Polynésie française, Nouvelle-Calédonie et Wallis-et-Futuna. Leur position et leur échelle sont arbitraires (c'est un encart, pas une vraie géographie). Passer la souris sur un territoire affiche son nom (« France » au niveau Pays). Les deux panneaux latéraux se replient avec les flèches `‹` et `›`.
 
-## Comprendre le score
+## Comprendre l'orientation moyenne
 
 - Chaque candidat (présidentielles) ou chaque nuance politique du ministère de l'Intérieur (législatives) est rattaché à une famille : extrême gauche, gauche, centre, droite, extrême droite, divers, régionalistes. Les écologistes (EELV et prédécesseurs) sont classés à gauche par défaut.
 - Chaque famille occupe une position sur un axe de `-2` (extrême gauche) à `+2` (extrême droite). Les signes servent seulement à orienter l'axe, ils n'ont aucune valeur de jugement.
-- Le **score** d'un territoire est la somme, sur les familles placées sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Les familles hors axe (divers, régionalistes) diluent le score mais apparaissent dans la répartition des votes.
+- L'**orientation moyenne** d'un territoire (son « score ») est la position moyenne de ses suffrages : la somme, sur les familles placées sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Dans les graphiques, elle est traduite en nuance : gauche, centre gauche, centre, centre droit, droite. Les familles hors axe (divers, régionalistes) diluent le score mais apparaissent dans la répartition des votes.
 - La couleur de la carte sature à `±0,6` et monte vite aux faibles écarts : un territoire fortement orienté n'a pas besoin d'atteindre `±2`, et un territoire peu orienté reste nettement coloré. Un territoire sans donnée est gris foncé.
 
 ## Ajuster le classement

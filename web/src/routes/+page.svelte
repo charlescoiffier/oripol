@@ -198,7 +198,10 @@
 		<aside class="left" aria-label="Réglages" inert={!leftOpen}>
 			<div class="inner">
 				<header>
-					<h1>Oripol</h1>
+					<div class="brand">
+						<h1>Oripol</h1>
+						<p class="tagline">Représentation des dynamiques de vote des élections françaises</p>
+					</div>
 					<button class="icon-btn" type="button" aria-label="Replier le panneau" onclick={() => (leftOpen = false)}>‹</button>
 				</header>
 
@@ -337,12 +340,21 @@
 	}
 	header {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		gap: 6px;
 		margin-bottom: 10px;
 	}
-	h1 {
+	.brand {
 		flex: 1;
+		min-width: 0;
+	}
+	.tagline {
+		margin: 1px 0 0;
+		font-size: 11px;
+		line-height: 1.3;
+		color: var(--muted);
+	}
+	h1 {
 		color: var(--accent);
 		letter-spacing: -0.01em;
 	}

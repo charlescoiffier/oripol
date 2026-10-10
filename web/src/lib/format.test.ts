@@ -93,7 +93,7 @@ describe('statusLine', () => {
 	});
 	it('explains an unscored result by the share of classified votes', () => {
 		expect(flat(statusLine(point({ status: 'unscored', classified: 0.23 })) ?? '')).toBe(
-			'Orientation non calculée : seulement 23,0 % des voix ont une étiquette politique'
+			'Orientation moyenne non calculée : seulement 23,0 % des voix ont une étiquette politique'
 		);
 	});
 	it('is empty for a normal result', () => {

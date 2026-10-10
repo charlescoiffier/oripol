@@ -119,10 +119,10 @@ nuances:
   UMP: {label: "Union pour un mouvement populaire", family: droite}
   UXD: {label: "Union de l'extrême droite", family: extreme_droite}
   VEC: {label: "Les Verts / Les Écologistes", family: gauche}
-  LGC: {label: "Liste gauche et centre (2008)", family: gauche, to_validate: true}
+  LGC: {label: "Liste gauche et centre (2008)", family: gauche}
   LGJ: {label: "Liste Gilets jaunes (2020)", family: divers}
   LHOR: {label: "Liste Horizons", family: centre}
-  LMC: {label: "Liste majorité et centre (2008)", family: droite, to_validate: true}
+  LMC: {label: "Liste majorité et centre (2008)", family: droite}
   LNC: {label: "Liste non classée", family: non_classe}
   LPG: {label: "Liste Parti de gauche", family: gauche}
   LREN: {label: "Liste Renaissance", family: centre}

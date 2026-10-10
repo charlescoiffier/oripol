@@ -93,7 +93,7 @@
 					formatter: (params: { dataIndex: number }[]) => {
 						const p = points[params[0].dataIndex];
 						const line =
-							p.status === 'ok' && p.score !== null ? `Orientation : ${orientationLabel(p.score)}` : '';
+							p.status === 'ok' && p.score !== null ? `Orientation moyenne : ${orientationLabel(p.score)}` : '';
 						return tooltipHeader(p) + (line ? `<div>${line}</div>` : '') + note(p);
 					}
 				},
@@ -110,7 +110,7 @@
 				yAxis: { type: 'category', data: years, inverse: true, axisTick: { show: false }, axisLine: { show: false } },
 				series: [
 					{
-						name: 'Orientation',
+						name: 'Orientation moyenne',
 						type: 'line',
 						symbolSize: 8,
 						itemStyle: { color: '#db4c3f' },
@@ -136,7 +136,7 @@
 					},
 					{
 						// résultat sans orientation calculable (peu de voix étiquetées) : cercle gris creux
-						name: 'Orientation non calculée',
+						name: 'Orientation moyenne non calculée',
 						type: 'scatter',
 						symbol: 'circle',
 						symbolSize: 8,
@@ -224,7 +224,7 @@
 	{#if hasAbsent || hasUnscored}
 		<ul class="marks">
 			{#if hasAbsent}<li><span class="cross">×</span>Pas de résultat à ce scrutin (par exemple : élection pliée au premier tour)</li>{/if}
-			{#if hasUnscored}<li><span class="ring"></span>Orientation non calculée (peu de voix étiquetées)</li>{/if}
+			{#if hasUnscored}<li><span class="ring"></span>Orientation moyenne non calculée (peu de voix étiquetées)</li>{/if}
 		</ul>
 	{/if}
 

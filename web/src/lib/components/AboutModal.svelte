@@ -25,11 +25,12 @@
 				gauche par défaut.
 			</p>
 			<p>
-				Chaque famille a une position sur un axe de −2 (extrême gauche) à +2 (extrême droite). Le
-				<strong>score</strong> d'un territoire est la somme, sur les familles placées sur l'axe, de leur part
-				des suffrages exprimés multipliée par leur position. Les familles hors axe diluent le score mais
-				apparaissent dans la répartition des votes. Les signes négatifs ou positifs n'ont aucune valeur de
-				jugement : ils servent seulement à orienter l'axe.
+				Chaque famille a une position sur un axe de −2 (extrême gauche) à +2 (extrême droite). L'<strong>orientation
+				moyenne</strong> d'un territoire est la position moyenne de ses suffrages : la somme, sur les familles placées
+				sur l'axe, de leur part des suffrages exprimés multipliée par leur position. Les familles hors axe diluent
+				cette moyenne mais apparaissent dans la répartition des votes. Les signes négatifs ou positifs n'ont aucune
+				valeur de jugement : ils servent seulement à orienter l'axe. Dans les graphiques, la moyenne est traduite en
+				nuance : gauche, centre gauche, centre, centre droit, droite.
 			</p>
 			<p>
 				Ce classement est discutable : vous pouvez modifier la position de chaque famille et le rattachement
