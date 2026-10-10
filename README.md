@@ -1,3 +1,6 @@
+> [!WARNING]
+> Ce projet a été vibecodé avec l’aide de l’intelligence artificielle.
+
 # Oripol
 
 Représentation des dynamiques de vote des élections françaises : une application web qui montre comment un territoire français (commune, département, région, pays) se déplace politiquement d'une élection à l'autre, à partir des résultats officiels.
