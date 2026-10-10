@@ -31,7 +31,7 @@ Le classement des candidats par famille politique est proposé par défaut, mais
 
 Quand on change de niveau, la sélection suit : en passant à un niveau supérieur (par exemple d'une commune à son département), le territoire parent est sélectionné et la carte zoome dessus ; en passant à un niveau inférieur, le territoire reste affiché dans la fiche et la carte zoome sur son emprise pour montrer ses subdivisions. « Pays » revient à la vue d'ensemble à chaque clic.
 
-Dans la fiche, les années sont empilées (2002 en bas, 2022 en haut) et la courbe se place de part et d'autre de la ligne médiane : la gauche à gauche, la droite à droite.
+Dans la fiche, les années sont empilées (la plus ancienne en haut) et la courbe se place de part et d'autre de la ligne médiane : la gauche à gauche, la droite à droite.
 
 Les territoires d'outre-mer sont placés dans la carte elle-même, en bas à gauche de la métropole, chacun dans son cadre : Guadeloupe, Martinique, Guyane, La Réunion, Mayotte, Saint-Pierre-et-Miquelon, Saint-Barthélemy, Saint-Martin, Polynésie française, Nouvelle-Calédonie et Wallis-et-Futuna. Leur position et leur échelle sont arbitraires (c'est un encart, pas une vraie géographie). Passer la souris sur un territoire affiche son nom (« France » au niveau Pays). Les deux panneaux latéraux se replient avec les flèches `‹` et `›`.
 

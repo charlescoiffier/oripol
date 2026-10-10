@@ -87,8 +87,8 @@
 					axisTick: { show: false },
 					splitLine: { show: false }
 				},
-				// catégories de bas en haut : 2002 en bas, 2022 en haut
-				yAxis: { type: 'category', data: years, axisTick: { show: false }, axisLine: { show: false } },
+				// années du haut vers le bas : la plus ancienne en haut
+				yAxis: { type: 'category', data: years, inverse: true, axisTick: { show: false }, axisLine: { show: false } },
 				series: [
 					{
 						name: 'Orientation',
