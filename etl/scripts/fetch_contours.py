@@ -31,7 +31,7 @@ DOM_REGIONS = {"971": "01", "972": "02", "973": "03", "974": "04", "976": "06"} 
 SKIPPED_DEPS = {"984", "989"}  # TAAF, Clipperton : pas de résultats électoraux
 # Territoires d'outre-mer, dans l'ordre de l'encart (clé, code collectivité pour les COM)
 OVERSEAS = ["971", "972", "973", "974", "976", "975", "977", "978", "987", "988", "986"]
-INSET = {"cols": 3, "left": -12.4, "top": 41.6, "box_w": 2.2, "box_h": 1.7, "gap": 0.2}  # degrés, au SO de la métropole
+INSET = {"cols": 4, "left": -5.4, "top": 41.0, "box_w": 1.55, "box_h": 1.1, "gap": 0.12}  # degrés, sous le sud-ouest de la métropole
 
 
 def get_json(client: httpx.Client, url: str, params: dict | None = None):
@@ -71,7 +71,7 @@ def write_bounds() -> None:
         for f in fc["features"]:
             boxes.setdefault(f["properties"]["id"], []).append(bbox(f["geometry"]))
     merged = {k: list(merge_bboxes(v)) for k, v in boxes.items()}
-    merged["FR"] = [INSET["left"] - 0.2, 33.9, 9.8, 51.4]  # métropole + encart outre-mer
+    merged["FR"] = [-5.8, 37.2, 9.9, 51.3]  # métropole + encart outre-mer
     (OUT / "bounds.json").write_text(json.dumps(merged, separators=(",", ":")), encoding="utf-8")
 
 

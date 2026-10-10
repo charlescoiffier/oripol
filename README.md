@@ -26,12 +26,14 @@ Le classement des candidats par famille politique est proposé par défaut, mais
 
 1. Choisir une **élection** dans le panneau de gauche.
 2. Choisir un **niveau** : Pays, Régions, Départements ou Communes. Au niveau Communes, il faut zoomer pour distinguer les communes.
-3. Cliquer sur un territoire (il est entouré d'un trait noir), ou le chercher avec la loupe, sous son nom dans le panneau de droite : la barre se déploie et la liste se réduit pendant la frappe. Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus.
+3. Cliquer sur un territoire (il est entouré d'un trait fin), ou le chercher dans la barre « Choix du territoire » du panneau de droite : la liste se réduit pendant la frappe. Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus. Un double clic sur un territoire zoome sur son emprise.
 4. Lire sa fiche : **évolution de l'orientation du vote** depuis 2002, puis **répartition des votes** par famille, avec l'abstention.
+
+Quand on change de niveau, la sélection suit : en passant à un niveau supérieur (par exemple d'une commune à son département), le territoire parent est sélectionné et la carte zoome dessus ; en passant à un niveau inférieur, le territoire reste affiché dans la fiche et la carte zoome sur son emprise pour montrer ses subdivisions. « Pays » revient à la vue d'ensemble à chaque clic.
 
 Dans la fiche, les années sont empilées (2002 en bas, 2022 en haut) et la courbe se place de part et d'autre de la ligne médiane : la gauche à gauche, la droite à droite.
 
-Les territoires d'outre-mer sont placés dans la carte elle-même, en bas à gauche de la métropole, chacun dans son cadre : Guadeloupe, Martinique, Guyane, La Réunion, Mayotte, Saint-Pierre-et-Miquelon, Saint-Barthélemy, Saint-Martin, Polynésie française, Nouvelle-Calédonie et Wallis-et-Futuna. Leur position et leur échelle sont arbitraires (c'est un encart, pas une vraie géographie). Passer la souris sur un territoire affiche son nom. Les deux panneaux latéraux se replient avec les flèches `‹` et `›`.
+Les territoires d'outre-mer sont placés dans la carte elle-même, en bas à gauche de la métropole, chacun dans son cadre : Guadeloupe, Martinique, Guyane, La Réunion, Mayotte, Saint-Pierre-et-Miquelon, Saint-Barthélemy, Saint-Martin, Polynésie française, Nouvelle-Calédonie et Wallis-et-Futuna. Leur position et leur échelle sont arbitraires (c'est un encart, pas une vraie géographie). Passer la souris sur un territoire affiche son nom (« France » au niveau Pays). Les deux panneaux latéraux se replient avec les flèches `‹` et `›`.
 
 ## Comprendre le score
 
@@ -118,7 +120,7 @@ Les paramètres invalides sont ignorés sans erreur.
 | `etl/src/oripol_etl/` | Pipeline : `cog`, `geo`, `ministry`, `families`, `aggregate`, `validate`, `export` |
 | `etl/scripts/` | Téléchargement des sources et construction des contours |
 | `etl/mappings/` | Familles et rattachement des candidats (données à relire avant publication) |
-| `web/src/lib/` | Logique pure (`score`, `series`, `search`, `url-state`) et composants Svelte |
+| `web/src/lib/` | Logique pure (`score`, `series`, `search`, `hierarchy`, `url-state`) et composants Svelte |
 | `docs/` | Spécification, plan d'implémentation et captures d'écran |
 
 ## Tests

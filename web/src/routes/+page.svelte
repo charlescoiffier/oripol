@@ -7,6 +7,7 @@
 	import { loadDataset, type Dataset } from '../lib/data';
 	import { score } from '../lib/score';
 	import { buildSeries } from '../lib/series';
+	import { planLevelChange } from '../lib/hierarchy';
 	import { levelForId } from '../lib/search';
 	import { decodeState, encodeState } from '../lib/url-state';
 	import AboutModal from '../lib/components/AboutModal.svelte';
@@ -24,6 +25,7 @@
 	let aboutOpen = $state(false);
 	let focus = $state<Focus | undefined>(undefined);
 	let boundsIndex: Record<string, [number, number, number, number]> | null = null;
+	let parents: Record<string, string> = {};
 
 	const PREFIX: Record<Level, string> = { pays: 'DEP-', regions: 'REG-', departements: 'DEP-', communes: 'COM-' };
 	const LEVELS: [Level, string][] = [
@@ -97,9 +99,35 @@
 		app.territory ? KINDS[app.territory === 'FR' ? 'FR' : app.territory.split('-')[0]] : ''
 	);
 
-	function setLevel(l: Level) {
+	/** Emprises et hiérarchie des territoires, chargées à la première utilisation. */
+	async function ensureGeo(): Promise<boolean> {
+		if (boundsIndex) return true;
+		try {
+			const [b, p] = await Promise.all([
+				fetch(`${BASE}/data/bounds.json`).then((r) => r.json()),
+				fetch(`${BASE}/data/parents.json`).then((r) => r.json())
+			]);
+			boundsIndex = b;
+			parents = p;
+			return true;
+		} catch {
+			return false; // sans emprises, on garde la vue actuelle
+		}
+	}
+
+	async function focusOn(id: string) {
+		if (!(await ensureGeo())) return;
+		const bounds = boundsIndex?.[id];
+		if (bounds) focus = { bounds }; // nouvel objet à chaque fois : le zoom se refait même sur le même territoire
+	}
+
+	/** Changement de niveau : sélection du parent / conservation du territoire, et zoom adapté. */
+	async function setLevel(l: Level) {
+		await ensureGeo();
+		const plan = planLevelChange(app.territory, l, parents);
 		app.level = l;
-		if (l === 'pays') app.territory = 'FR';
+		app.territory = plan.territory;
+		if (plan.focusId) await focusOn(plan.focusId);
 	}
 
 	function select(id: string) {
@@ -107,19 +135,22 @@
 		rightOpen = true;
 	}
 
+	/** Double clic : sélection et zoom sur l'emprise du territoire. */
+	async function zoomTo(id: string) {
+		select(id);
+		await focusOn(app.level === 'pays' ? 'FR' : id);
+	}
+
 	/** Territoire choisi dans la recherche : on le valide, on change de niveau et on zoome dessus. */
 	async function goToTerritory(id: string) {
 		app.level = levelForId(id);
 		app.territory = id;
 		rightOpen = true;
-		try {
-			boundsIndex ??= await (await fetch(`${BASE}/data/bounds.json`)).json();
-		} catch {
-			return; // sans emprises, on garde la vue actuelle
-		}
-		const bounds = boundsIndex?.[id];
-		if (bounds) focus = { bounds };
+		await focusOn(id);
 	}
+
+	// contour de sélection : seulement si le territoire est du niveau affiché
+	const selectedOnMap = $derived(app.territory && levelForId(app.territory) === app.level ? app.territory : null);
 </script>
 
 <svelte:head><title>Oripol – évolution politique des territoires</title></svelte:head>
@@ -184,7 +215,7 @@
 		</aside>
 
 		<main>
-			<Map level={app.level} {colors} selected={app.territory} onselect={select} {focus} />
+			<Map level={app.level} {colors} selected={selectedOnMap} onselect={select} onzoom={zoomTo} {focus} />
 			{#if !leftOpen}
 				<button class="handle left-handle" type="button" aria-label="Déplier le panneau de gauche" onclick={() => (leftOpen = true)}>›</button>
 			{/if}
@@ -197,15 +228,15 @@
 			<div class="inner">
 				<div class="top">
 					<button class="icon-btn" type="button" aria-label="Replier le panneau" onclick={() => (rightOpen = false)}>›</button>
-					<h3 class="section-title first">Choix du territoire</h3>
 				</div>
+				<h3 class="section-title">Choix du territoire</h3>
+				<div class="search-row"><TerritorySearch names={dataset.names} onselect={goToTerritory} /></div>
 				{#if territoryName}
 					<header class="territory">
 						<h2>{territoryName}</h2>
 						<span class="kind">{territoryKind}</span>
 					</header>
 				{/if}
-				<div class="search-row"><TerritorySearch names={dataset.names} onselect={goToTerritory} /></div>
 				{#if territoryName}
 					<TerritoryPanel {points} families={dataset.families} />
 				{:else}
@@ -351,24 +382,20 @@
 	}
 	.top {
 		display: flex;
-		gap: 6px;
-		align-items: center;
-		margin-bottom: 8px;
-	}
-	.top .section-title {
-		margin: 0;
+		margin: -4px 0 0 -6px;
 	}
 	.territory {
 		display: flex;
 		align-items: baseline;
 		gap: 8px;
+		margin-bottom: 2px;
 	}
 	.kind {
 		color: var(--muted);
 		font-size: 12px;
 	}
 	.search-row {
-		margin: 8px 0 4px;
+		margin: 0 0 14px;
 	}
 	.hint {
 		color: var(--muted);

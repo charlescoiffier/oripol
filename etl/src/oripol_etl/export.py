@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import polars as pl
+
 from .families import Family, ListMapping
 
 LABELS = {"pres": "Présidentielle"}
@@ -64,3 +66,15 @@ def write_site_data(
             ),
             encoding="utf-8",
         )
+
+
+def write_parents(out: Path, geo: pl.DataFrame) -> None:
+    """Hiérarchie des territoires (id -> id du parent) : commune → département → région."""
+    parents: dict[str, str] = {}
+    for code, dep, reg in geo.select("code", "dep", "reg").iter_rows():
+        if dep == "ZZ":  # Français établis hors de France : pas de commune ni de région
+            continue
+        parents[f"COM-{code}"] = f"DEP-{dep}"
+        if reg is not None:
+            parents[f"DEP-{dep}"] = f"REG-{reg}"
+    (out / "parents.json").write_text(json.dumps(parents, separators=(",", ":")), encoding="utf-8")

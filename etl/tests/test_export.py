@@ -22,3 +22,26 @@ def test_writes_prefixed_list_ids_and_index(tmp_path):
     assert el["territories"]["FR"] == [10, 8, 1, 1, 8, 8]  # inscrits, votants, blancs, nuls, exprimés, voix par liste
     names = json.loads((tmp_path / "names.json").read_text())
     assert names["FR"] == "France"
+
+
+def test_write_parents_links_communes_to_departments_and_departments_to_regions(tmp_path):
+    import polars as pl
+
+    from oripol_etl.export import write_parents
+
+    geo = pl.DataFrame(
+        {
+            "code": ["69123", "69266", "97411", "98735", "ZZ042"],
+            "dep": ["69", "69", "974", "987", "ZZ"],
+            "reg": ["84", "84", "04", "987", None],
+        }
+    )
+    write_parents(tmp_path, geo)
+    parents = json.loads((tmp_path / "parents.json").read_text())
+    assert parents["COM-69123"] == "DEP-69"
+    assert parents["COM-69266"] == "DEP-69"
+    assert parents["DEP-69"] == "REG-84"
+    assert parents["DEP-974"] == "REG-04"
+    assert parents["DEP-987"] == "REG-987"
+    assert "DEP-ZZ" not in parents  # Français de l'étranger : pas de région
+    assert not any(k.startswith("COM-ZZ") for k in parents)  # pas de commune dans le département fictif

@@ -5,7 +5,7 @@ import polars as pl
 from . import config as c
 from .aggregate import build_payload
 from .cog import build_resolver
-from .export import write_site_data
+from .export import write_parents, write_site_data
 from .families import load_families, load_list_mappings
 from .geo import build_geo
 from .ministry import to_commune_tables
@@ -47,6 +47,7 @@ def run() -> None:
         names[f"DEP-{code}"] = label
         names[f"REG-{code}"] = label
     write_site_data(c.OUT, families, mappings, payloads, names=names)
+    write_parents(c.OUT, geo)
     print(f"{len(payloads)} élections, {geo.height} communes → {c.OUT}")
 
 

@@ -12,23 +12,30 @@
 		colors,
 		selected = null,
 		onselect,
+		onzoom,
 		focus = undefined
 	}: {
 		level: Level;
 		colors: Record<string, string>;
 		selected?: string | null;
 		onselect: (id: string) => void;
+		onzoom: (id: string) => void;
 		focus?: Focus;
 	} = $props();
 
 	const LAYERS = ['regions', 'departements', 'communes'] as const;
 	// métropole + encart outre-mer en bas à gauche
-	const HOME: Bounds = [-12.6, 33.9, 9.8, 51.4];
+	const HOME: Bounds = [-5.8, 37.2, 9.9, 51.3];
 	const SEA = '#d3dde8';
 
 	let container: HTMLDivElement;
 	let map: import('maplibre-gl').Map | undefined;
 	let ready = $state(false);
+	// niveau lu par les écouteurs de la carte (qui ne suivent pas la réactivité)
+	let levelRef: Level = 'departements';
+	$effect(() => {
+		levelRef = level;
+	});
 	let tip = $state<{ x: number; y: number; text: string } | null>(null);
 
 	onMount(() => {
@@ -39,6 +46,7 @@
 			bounds: HOME,
 			fitBoundsOptions: { padding: 20 },
 			maxZoom: 11,
+			doubleClickZoom: false, // le double clic zoome sur l'emprise du territoire
 			attributionControl: false
 		});
 		map = m;
@@ -82,6 +90,10 @@
 					const id = e.features?.[0]?.properties?.id;
 					if (typeof id === 'string') onselect(id);
 				});
+				m.on('dblclick', `${l}-fill`, (e: { features?: { properties?: Record<string, unknown> }[] }) => {
+					const id = e.features?.[0]?.properties?.id;
+					if (typeof id === 'string') onzoom(id);
+				});
 			}
 			// contour du territoire sélectionné : un filtre par couche, toujours au-dessus
 			for (const l of LAYERS) {
@@ -92,7 +104,7 @@
 					'source-layer': l,
 					filter: ['==', ['get', 'id'], ''],
 					layout: { 'line-join': 'round' },
-					paint: { 'line-color': '#111111', 'line-width': 2.4 }
+					paint: { 'line-color': '#4a4f57', 'line-width': 1.4 }
 				});
 			}
 			// info-bulle au survol : nom du territoire (utile pour reconnaître les cadres d'outre-mer)
@@ -102,7 +114,8 @@
 				})[0];
 				const name = f?.properties?.name;
 				m.getCanvas().style.cursor = f && f.layer.id !== 'inset-fill' ? 'pointer' : '';
-				tip = typeof name === 'string' ? { x: e.point.x, y: e.point.y, text: name } : null;
+				// au niveau Pays, la carte n'a qu'un territoire : la France
+				tip = typeof name === 'string' ? { x: e.point.x, y: e.point.y, text: levelRef === 'pays' ? 'France' : name } : null;
 			});
 			m.on('mouseout', () => (tip = null));
 			ready = true;

@@ -58,3 +58,37 @@ def test_non_polygon_parts_are_dropped_so_the_result_is_always_polygonal():
     }
     out = dissolve([mixed], "DEP-989", "Clipperton")
     assert out["geometry"]["type"] in {"Polygon", "MultiPolygon"}
+
+
+def test_mixed_dimension_input_is_unioned_without_crashing():
+    mixed = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "GeometryCollection",
+            "geometries": [
+                {"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]},
+                {"type": "LineString", "coordinates": [[5, 5], [6, 6]]},
+            ],
+        },
+    }
+    out = dissolve([mixed, square(1, 0, 2, 1)], "DEP-989", "Clipperton")  # square(x0, y0, x1, y1) : voisin du premier carré
+    assert out["geometry"]["type"] in {"Polygon", "MultiPolygon"}
+
+
+def test_degenerate_part_of_a_multipolygon_is_dropped_not_fatal():
+    multi = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+                [[[5, 5], [5.00001, 5], [5.00002, 5], [5, 5]]],  # anneau écrasé : aire nulle
+            ],
+        },
+    }
+    out = dissolve([multi], "DEP-986", "Wallis-et-Futuna")
+    assert out["geometry"]["type"] in {"Polygon", "MultiPolygon"}
+    xs = [p[0] for poly in (out["geometry"]["coordinates"] if out["geometry"]["type"] == "MultiPolygon" else [out["geometry"]["coordinates"]]) for ring in poly for p in ring]
+    assert max(xs) <= 1.0001  # la partie dégénérée a disparu
