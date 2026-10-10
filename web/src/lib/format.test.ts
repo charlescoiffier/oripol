@@ -39,6 +39,10 @@ describe('pointDetails', () => {
 		expect(flat(d.votants)).toBe('Votants : 800 (80,0 % des inscrits)');
 		expect(flat(d.blancs)).toBe('Blancs : 16 (2,0 % des votants)');
 	});
+	it('gives abstentions (inscrits minus votants) with their share of registered voters', () => {
+		const d = pointDetails(point());
+		expect(flat(d.abstentions)).toBe('Abstentions : 200 (20,0 % des inscrits)');
+	});
 	it('does not claim zero blanks when the source does not separate them from nuls', () => {
 		const d = pointDetails(point({ blancs: 0, nuls: 30 }));
 		expect(flat(d.blancs)).toBe('Blancs et nuls : 30 (non distingués avant 2017)');
@@ -46,6 +50,7 @@ describe('pointDetails', () => {
 	it('handles a territory with no voters without dividing by zero', () => {
 		const d = pointDetails(point({ inscrits: 0, votants: 0, blancs: 0, nuls: 0 }));
 		expect(d.votants).toBe('Votants : 0');
+		expect(d.abstentions).toBe('Abstentions : 0');
 		expect(d.blancs).toBe('Blancs : 0');
 	});
 });

@@ -35,7 +35,7 @@
 		return (
 			`<div style="font-weight:600">${esc(p.label)}</div>` +
 			`<div>${esc(territoryName)}</div>` +
-			`<div style="color:#666;margin:4px 0 6px">${esc(d.votants)}<br/>${esc(d.blancs)}</div>`
+			`<div style="color:#666;margin:4px 0 6px">${esc(d.votants)}<br/>${esc(d.abstentions)}<br/>${esc(d.blancs)}</div>`
 		);
 	}
 
@@ -118,7 +118,7 @@
 					formatter: (params: { dataIndex: number; marker: string; seriesName: string; value: number | null }[]) => {
 						const p = points[params[0].dataIndex];
 						const rows = params
-							.filter((r) => r.value !== null && r.value !== undefined && (r.value as number) > 0)
+							.filter((r) => !r.seriesName.startsWith('Abstention') && r.value !== null && r.value !== undefined && (r.value as number) > 0)
 							.map((r) => `<div>${r.marker}${esc(r.seriesName)} : <b>${formatPercent(r.value as number)}</b></div>`)
 							.join('');
 						return tooltipHeader(p) + rows;
