@@ -42,3 +42,19 @@ def test_invalid_geometry_is_repaired_instead_of_crashing():
     }
     out = dissolve([bowtie, square(5, 5, 6, 6)], "DEP-988", "Nouvelle-Calédonie")
     assert out["geometry"]["type"] in {"Polygon", "MultiPolygon"}
+
+
+def test_non_polygon_parts_are_dropped_so_the_result_is_always_polygonal():
+    mixed = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "GeometryCollection",
+            "geometries": [
+                {"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]},
+                {"type": "LineString", "coordinates": [[5, 5], [6, 6]]},
+            ],
+        },
+    }
+    out = dissolve([mixed], "DEP-989", "Clipperton")
+    assert out["geometry"]["type"] in {"Polygon", "MultiPolygon"}

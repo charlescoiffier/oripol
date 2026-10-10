@@ -10,56 +10,51 @@
 	let {
 		level,
 		colors,
+		selected = null,
 		onselect,
-		bounds = undefined,
-		center = [2.5, 46.6],
-		zoom = 4.8,
-		interactive = true,
 		focus = undefined
 	}: {
 		level: Level;
 		colors: Record<string, string>;
+		selected?: string | null;
 		onselect: (id: string) => void;
-		bounds?: Bounds;
-		center?: [number, number];
-		zoom?: number;
-		interactive?: boolean;
 		focus?: Focus;
 	} = $props();
 
 	const LAYERS = ['regions', 'departements', 'communes'] as const;
+	// métropole + encart outre-mer en bas à gauche
+	const HOME: Bounds = [-12.6, 33.9, 9.8, 51.4];
+	const SEA = '#d3dde8';
+
 	let container: HTMLDivElement;
-	let map: ReturnType<typeof createMap> | undefined;
+	let map: import('maplibre-gl').Map | undefined;
 	let ready = $state(false);
-
-	function createMap() {
-		const maplibregl = setupMaplibre();
-		return new maplibregl.Map({
-			container,
-			style: {
-				version: 8,
-				sources: {},
-				layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#d3dde8' } }]
-			},
-			...(bounds ? { bounds, fitBoundsOptions: { padding: 6 } } : { center, zoom }),
-			maxZoom: 11,
-			interactive,
-			attributionControl: false
-		});
-	}
-
-	function visibleFills(l: Level): string[] {
-		return l === 'regions' ? ['regions-fill'] : l === 'communes' ? ['communes-fill', 'departements-fill'] : ['departements-fill'];
-	}
+	let tip = $state<{ x: number; y: number; text: string } | null>(null);
 
 	onMount(() => {
 		const maplibregl = setupMaplibre();
-		const m = createMap();
+		const m = new maplibregl.Map({
+			container,
+			style: { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': SEA } }] },
+			bounds: HOME,
+			fitBoundsOptions: { padding: 20 },
+			maxZoom: 11,
+			attributionControl: false
+		});
 		map = m;
-		if (import.meta.env.DEV && interactive) (window as unknown as { __map: unknown }).__map = m;
-		if (interactive) m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+		if (import.meta.env.DEV) (window as unknown as { __map: unknown }).__map = m;
+		m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
 		m.on('load', () => {
 			m.addSource('contours', { type: 'vector', url: `pmtiles://${TILES_URL}` });
+			// cadres de l'encart outre-mer, sous les territoires
+			m.addLayer({ id: 'inset-fill', type: 'fill', source: 'contours', 'source-layer': 'inset', paint: { 'fill-color': '#e9eff6' } });
+			m.addLayer({
+				id: 'inset-line',
+				type: 'line',
+				source: 'contours',
+				'source-layer': 'inset',
+				paint: { 'line-color': '#9db0c5', 'line-width': 1 }
+			});
 			for (const l of LAYERS) {
 				const minzoom = l === 'communes' ? { minzoom: 6 } : {};
 				m.addLayer({
@@ -83,31 +78,39 @@
 						'line-opacity': l === 'communes' ? ['interpolate', ['linear'], ['zoom'], 6.5, 0, 8, 1] : 1
 					}
 				});
-				if (interactive) {
-					m.on('click', `${l}-fill`, (e: { features?: { properties?: Record<string, unknown> }[] }) => {
-						const id = e.features?.[0]?.properties?.id;
-						if (typeof id === 'string') onselect(id);
-					});
-					m.on('mouseenter', `${l}-fill`, () => (m.getCanvas().style.cursor = 'pointer'));
-					m.on('mouseleave', `${l}-fill`, () => (m.getCanvas().style.cursor = ''));
-				}
+				m.on('click', `${l}-fill`, (e: { features?: { properties?: Record<string, unknown> }[] }) => {
+					const id = e.features?.[0]?.properties?.id;
+					if (typeof id === 'string') onselect(id);
+				});
 			}
+			// contour du territoire sélectionné : un filtre par couche, toujours au-dessus
+			for (const l of LAYERS) {
+				m.addLayer({
+					id: `${l}-selected`,
+					type: 'line',
+					source: 'contours',
+					'source-layer': l,
+					filter: ['==', ['get', 'id'], ''],
+					layout: { 'line-join': 'round' },
+					paint: { 'line-color': '#111111', 'line-width': 2.4 }
+				});
+			}
+			// info-bulle au survol : nom du territoire (utile pour reconnaître les cadres d'outre-mer)
+			m.on('mousemove', (e: { point: { x: number; y: number } }) => {
+				const f = m.queryRenderedFeatures([e.point.x, e.point.y], {
+					layers: ['communes-fill', 'departements-fill', 'regions-fill', 'inset-fill'].filter((id) => m.getLayoutProperty(id, 'visibility') !== 'none')
+				})[0];
+				const name = f?.properties?.name;
+				m.getCanvas().style.cursor = f && f.layer.id !== 'inset-fill' ? 'pointer' : '';
+				tip = typeof name === 'string' ? { x: e.point.x, y: e.point.y, text: name } : null;
+			});
+			m.on('mouseout', () => (tip = null));
 			ready = true;
 		});
-		// les encarts ne sont pas interactifs : on retrouve le territoire cliqué à la main
-		const onBoxClick = (e: MouseEvent) => {
-			if (interactive || !ready) return;
-			const rect = container.getBoundingClientRect();
-			const f = m.queryRenderedFeatures([e.clientX - rect.left, e.clientY - rect.top], { layers: visibleFills(level) });
-			const id = f[0]?.properties?.id;
-			if (typeof id === 'string') onselect(id);
-		};
-		container.addEventListener('click', onBoxClick);
 		// le conteneur change de taille quand un panneau latéral se rabat
 		const ro = new ResizeObserver(() => m.resize());
 		ro.observe(container);
 		return () => {
-			container.removeEventListener('click', onBoxClick);
 			ro.disconnect();
 			m.remove();
 		};
@@ -123,17 +126,22 @@
 		};
 		const lineShown: Record<string, boolean> = {
 			regions: level === 'regions',
-			departements: level !== 'regions' && level !== 'pays',
+			departements: level === 'departements' || level === 'communes',
 			communes: level === 'communes'
 		};
 		for (const l of LAYERS) {
 			m.setLayoutProperty(`${l}-fill`, 'visibility', fillShown[l] ? 'visible' : 'none');
 			m.setLayoutProperty(`${l}-line`, 'visibility', lineShown[l] ? 'visible' : 'none');
 		}
-		// au niveau communes, les limites départementales restent visibles par-dessus
+		// au niveau communes, les limites départementales servent de repère à petite échelle, puis s'effacent
+		// dès que les communes apparaissent
 		m.setPaintProperty('departements-line', 'line-color', level === 'communes' ? '#8a8f98' : '#ffffff');
 		m.setPaintProperty('departements-line', 'line-width', level === 'communes' ? 0.8 : 0.7);
-		if (level === 'communes') m.moveLayer('departements-line');
+		m.setPaintProperty(
+			'departements-line',
+			'line-opacity',
+			level === 'communes' ? ['interpolate', ['linear'], ['zoom'], 5.5, 1, 6.5, 0] : 1
+		);
 
 		// regroupe les identifiants par couleur : une expression « match » compacte même à 35 000 communes
 		const groups = new Map<string, string[]>();
@@ -150,6 +158,13 @@
 		}
 	});
 
+	// focus visuel : contour noir autour du territoire sélectionné
+	$effect(() => {
+		if (!ready || !map) return;
+		for (const l of LAYERS) map.setFilter(`${l}-selected`, ['==', ['get', 'id'], selected ?? '']);
+		for (const l of LAYERS) map.moveLayer(`${l}-selected`);
+	});
+
 	$effect(() => {
 		if (!ready || !map || !focus) return;
 		map.fitBounds(focus.bounds, { padding: 70, duration: 700, maxZoom: 11 });
@@ -157,10 +172,24 @@
 </script>
 
 <div bind:this={container} class="map"></div>
+{#if tip}
+	<div class="tip" style="left:{tip.x + 12}px; top:{tip.y + 12}px">{tip.text}</div>
+{/if}
 
 <style>
 	.map {
 		position: absolute;
 		inset: 0;
+	}
+	.tip {
+		position: absolute;
+		z-index: 6;
+		max-width: 220px;
+		padding: 3px 7px;
+		border-radius: 4px;
+		background: rgba(32, 32, 32, 0.88);
+		color: #fff;
+		font-size: 12px;
+		pointer-events: none;
 	}
 </style>

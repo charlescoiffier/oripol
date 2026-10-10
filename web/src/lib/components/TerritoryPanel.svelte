@@ -9,12 +9,7 @@
 
 	echarts.use([LineChart, BarChart, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
 
-	let {
-		name,
-		kind,
-		points,
-		families
-	}: { name: string; kind: string; points: SeriesPoint[]; families: Family[] } = $props();
+	let { points, families }: { points: SeriesPoint[]; families: Family[] } = $props();
 
 	let orientationEl: HTMLDivElement;
 	let sharesEl: HTMLDivElement;
@@ -128,10 +123,6 @@
 </script>
 
 <section>
-	<header>
-		<h2>{name}</h2>
-		<span class="kind">{kind}</span>
-	</header>
 	{#if points.length === 0}
 		<p class="empty">Pas de données pour ce territoire.</p>
 	{/if}
@@ -151,15 +142,6 @@
 </section>
 
 <style>
-	header {
-		display: flex;
-		align-items: baseline;
-		gap: 8px;
-	}
-	.kind {
-		color: var(--muted);
-		font-size: 12px;
-	}
 	.chart {
 		width: 100%;
 		height: 230px;

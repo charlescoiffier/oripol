@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { searchTerritories } from '../search';
 
 	let {
@@ -9,6 +10,8 @@
 	let query = $state('');
 	let open = $state(false);
 	let active = $state(0);
+	let expanded = $state(false); // barre déployée ; sinon, simple bouton loupe
+	let input = $state<HTMLInputElement>();
 
 	const hits = $derived(searchTerritories(names, query, 12));
 
@@ -16,6 +19,18 @@
 		onselect(id);
 		query = '';
 		open = false;
+		expanded = false;
+	}
+
+	async function expand() {
+		expanded = true;
+		await tick();
+		input?.focus();
+	}
+
+	function collapseIfEmpty() {
+		open = false;
+		if (!query.trim()) expanded = false;
 	}
 
 	function onkeydown(e: KeyboardEvent) {
@@ -30,51 +45,77 @@
 			e.preventDefault();
 			choose(hits[active].id);
 		} else if (e.key === 'Escape') {
-			open = false;
+			query = '';
+			collapseIfEmpty();
 		}
 	}
 </script>
 
 <div class="search">
-	<input
-		type="search"
-		role="combobox"
-		aria-expanded={open && hits.length > 0}
-		aria-controls="territory-hits"
-		aria-autocomplete="list"
-		autocomplete="off"
-		placeholder="Rechercher un territoire…"
-		bind:value={query}
-		oninput={() => {
-			open = true;
-			active = 0;
-		}}
-		onfocus={() => (open = true)}
-		onblur={() => setTimeout(() => (open = false), 120)}
-		{onkeydown}
-	/>
-	{#if open && hits.length}
-		<ul id="territory-hits" role="listbox">
-			{#each hits as h, i (h.id)}
-				<li role="option" aria-selected={i === active}>
-					<button
-						type="button"
-						class:active={i === active}
-						onmousedown={(e) => e.preventDefault()}
-						onclick={() => choose(h.id)}
-					>
-						<span class="label">{h.label}</span>
-						<span class="kind">{h.kind}{h.hint ? ` · ${h.hint}` : ''}</span>
-					</button>
-				</li>
-			{/each}
-		</ul>
+	{#if !expanded}
+		<button type="button" class="loupe" aria-label="Rechercher un territoire" title="Rechercher un territoire" onclick={expand}>
+			<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+				<circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2" />
+				<line x1="15.5" y1="15.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+			</svg>
+		</button>
+	{:else}
+		<input
+			bind:this={input}
+			type="search"
+			role="combobox"
+			aria-expanded={open && hits.length > 0}
+			aria-controls="territory-hits"
+			aria-autocomplete="list"
+			autocomplete="off"
+			placeholder="Rechercher un territoire…"
+			bind:value={query}
+			oninput={() => {
+				open = true;
+				active = 0;
+			}}
+			onfocus={() => (open = true)}
+			onblur={() => setTimeout(collapseIfEmpty, 120)}
+			{onkeydown}
+		/>
+		{#if open && hits.length}
+			<ul id="territory-hits" role="listbox">
+				{#each hits as h, i (h.id)}
+					<li role="option" aria-selected={i === active}>
+						<button
+							type="button"
+							class:active={i === active}
+							onmousedown={(e) => e.preventDefault()}
+							onclick={() => choose(h.id)}
+						>
+							<span class="label">{h.label}</span>
+							<span class="kind">{h.kind}{h.hint ? ` · ${h.hint}` : ''}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
 	{/if}
 </div>
 
 <style>
 	.search {
 		position: relative;
+	}
+	.loupe {
+		display: inline-grid;
+		place-items: center;
+		width: 30px;
+		height: 28px;
+		padding: 0;
+		border: 1px solid #ddd;
+		border-radius: var(--radius);
+		background: #fff;
+		color: var(--muted);
+	}
+	.loupe:hover {
+		background: #f4f4f4;
+		color: var(--text);
 	}
 	ul {
 		position: absolute;

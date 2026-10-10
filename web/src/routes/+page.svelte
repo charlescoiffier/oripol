@@ -134,7 +134,6 @@
 			<div class="inner">
 				<header>
 					<h1>Oripol</h1>
-					<button class="btn small" type="button" onclick={() => (aboutOpen = true)}>À propos</button>
 					<button class="icon-btn" type="button" aria-label="Replier le panneau" onclick={() => (leftOpen = false)}>‹</button>
 				</header>
 
@@ -177,11 +176,15 @@
 				{#if election}
 					<RankingEditor families={dataset.families} lists={election.lists} />
 				{/if}
+
+				<div class="about">
+					<button class="btn" type="button" onclick={() => (aboutOpen = true)}>À propos</button>
+				</div>
 			</div>
 		</aside>
 
 		<main>
-			<Map level={app.level} {colors} onselect={select} {focus} />
+			<Map level={app.level} {colors} selected={app.territory} onselect={select} {focus} />
 			{#if !leftOpen}
 				<button class="handle left-handle" type="button" aria-label="Déplier le panneau de gauche" onclick={() => (leftOpen = true)}>›</button>
 			{/if}
@@ -193,11 +196,18 @@
 		<aside class="right" aria-label="Territoire" inert={!rightOpen}>
 			<div class="inner">
 				<div class="top">
-					<TerritorySearch names={dataset.names} onselect={goToTerritory} />
 					<button class="icon-btn" type="button" aria-label="Replier le panneau" onclick={() => (rightOpen = false)}>›</button>
+					<h3 class="section-title first">Choix du territoire</h3>
 				</div>
 				{#if territoryName}
-					<TerritoryPanel name={territoryName} kind={territoryKind} {points} families={dataset.families} />
+					<header class="territory">
+						<h2>{territoryName}</h2>
+						<span class="kind">{territoryKind}</span>
+					</header>
+				{/if}
+				<div class="search-row"><TerritorySearch names={dataset.names} onselect={goToTerritory} /></div>
+				{#if territoryName}
+					<TerritoryPanel {points} families={dataset.families} />
 				{:else}
 					<p class="hint">Cliquez sur la carte ou recherchez un territoire pour voir son évolution.</p>
 					<button class="btn" type="button" onclick={() => select('FR')}>Voir la France</button>
@@ -234,10 +244,16 @@
 		background: #fff;
 	}
 	.inner {
+		display: flex;
+		flex-direction: column;
 		width: var(--left);
 		height: 100%;
 		overflow-y: auto;
 		padding: 10px 14px 16px;
+	}
+	.about {
+		margin-top: auto;
+		padding-top: 18px;
 	}
 	.right .inner {
 		width: var(--right);
@@ -252,11 +268,6 @@
 		flex: 1;
 		color: var(--accent);
 		letter-spacing: -0.01em;
-	}
-	.btn.small {
-		height: 24px;
-		padding: 0 8px;
-		font-size: 12px;
 	}
 	.field {
 		margin-bottom: 0;
@@ -342,10 +353,22 @@
 		display: flex;
 		gap: 6px;
 		align-items: center;
-		margin-bottom: 14px;
+		margin-bottom: 8px;
 	}
-	.top :global(.search) {
-		flex: 1;
+	.top .section-title {
+		margin: 0;
+	}
+	.territory {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+	}
+	.kind {
+		color: var(--muted);
+		font-size: 12px;
+	}
+	.search-row {
+		margin: 8px 0 4px;
 	}
 	.hint {
 		color: var(--muted);

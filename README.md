@@ -10,7 +10,7 @@ Aucun compte, aucun serveur applicatif : le site est statique et tout le calcul 
 
 | Départements, présidentielle 2022 | Recherche d'une commune, avec zoom | Principe de calcul et sources |
 |---|---|---|
-| ![Carte des départements, encart outre-mer et fiche du Rhône](docs/images/apercu-departements.jpg) | ![Lyon sélectionnée depuis la recherche](docs/images/recherche-commune.jpg) | ![Fenêtre À propos](docs/images/a-propos.jpg) |
+| ![Carte des départements, outre-mer en bas à gauche et fiche du Rhône](docs/images/apercu-departements.jpg) | ![Lyon sélectionnée depuis la recherche](docs/images/recherche-commune.jpg) | ![Fenêtre À propos](docs/images/a-propos.jpg) |
 
 ---
 
@@ -26,12 +26,12 @@ Le classement des candidats par famille politique est proposé par défaut, mais
 
 1. Choisir une **élection** dans le panneau de gauche.
 2. Choisir un **niveau** : Pays, Régions, Départements ou Communes. Au niveau Communes, il faut zoomer pour distinguer les communes.
-3. Cliquer sur un territoire, ou le chercher dans le panneau de droite (la liste se réduit pendant la frappe). Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus.
+3. Cliquer sur un territoire (il est entouré d'un trait noir), ou le chercher avec la loupe, sous son nom dans le panneau de droite : la barre se déploie et la liste se réduit pendant la frappe. Choisir un résultat le valide, bascule sur le niveau qui lui correspond et zoome dessus.
 4. Lire sa fiche : **évolution de l'orientation du vote** depuis 2002, puis **répartition des votes** par famille, avec l'abstention.
 
 Dans la fiche, les années sont empilées (2002 en bas, 2022 en haut) et la courbe se place de part et d'autre de la ligne médiane : la gauche à gauche, la droite à droite.
 
-L'encart **Outre-mer**, en bas à gauche de la carte, montre les uns sous les autres la Guadeloupe, la Martinique, la Guyane, La Réunion, Mayotte, Saint-Pierre-et-Miquelon, Saint-Martin et Saint-Barthélemy, la Polynésie française, la Nouvelle-Calédonie et Wallis-et-Futuna, colorés comme la carte principale ; un clic sélectionne le territoire. Les deux panneaux latéraux se replient avec les flèches `‹` et `›`.
+Les territoires d'outre-mer sont placés dans la carte elle-même, en bas à gauche de la métropole, chacun dans son cadre : Guadeloupe, Martinique, Guyane, La Réunion, Mayotte, Saint-Pierre-et-Miquelon, Saint-Barthélemy, Saint-Martin, Polynésie française, Nouvelle-Calédonie et Wallis-et-Futuna. Leur position et leur échelle sont arbitraires (c'est un encart, pas une vraie géographie). Passer la souris sur un territoire affiche son nom. Les deux panneaux latéraux se replient avec les flèches `‹` et `›`.
 
 ## Comprendre le score
 
@@ -55,6 +55,7 @@ La carte et les courbes se recalculent aussitôt. L'adresse de la page conserve 
 - Les communes fusionnées sont regroupées dans la commune actuelle (découpage 2026).
 - L'abstention, les blancs et les nuls sont rapportés aux inscrits.
 - Un territoire sans donnée apparaît en gris, jamais comme « centre ».
+- Les tendances dépendent beaucoup du classement : avec les choix par défaut (La France insoumise à gauche, Emmanuel Macron au centre), la droite et l'extrême droite semblent progresser de 2002 à 2022. Rattacher ces candidats autrement change nettement la courbe.
 - Le jeu source est incomplet pour deux scrutins : en 2002 il omet Mayotte, les collectivités d'outre-mer et les Français de l'étranger ; en 2007, les collectivités d'outre-mer et les Français de l'étranger. Le total « Pays » de ces deux années est donc un peu inférieur au résultat officiel.
 - Pas encore de législatives, municipales ni départementales.
 
@@ -86,6 +87,7 @@ sources officielles (parquet, CSV)
 
 - **ETL** (`etl/`) : lit les fichiers, résout les fusions de communes avec l'historique des mouvements du COG, rattache les candidats à une famille (`etl/mappings/presidentielle.yaml`), agrège commune → département → région → pays, puis **échoue sans rien écrire** si la somme des voix d'une commune diffère des exprimés ou si un candidat n'a pas de famille.
 - **Site** (`web/`) : charge les résultats bruts et recalcule le score à chaque réglage, ce qui rend le classement ajustable sans serveur. Les contours sont des tuiles PMTiles ; la couche des 35 000 communes n'est embarquée qu'à partir du zoom 6.
+- **Outre-mer** : `etl/src/oripol_etl/inset.py` déplace et met à l'échelle chaque territoire dans un cadre au sud-ouest de la métropole, en conservant sa forme réelle (conversion longitude → distance selon la latitude).
 - **Territoires** : identifiants `FR`, `REG-<code>`, `DEP-<code>` et `COM-<code INSEE>`. Les collectivités d'outre-mer sont à la fois leur propre département et leur propre région ; les Français de l'étranger forment le département fictif `DEP-ZZ`, sans carte.
 
 ## Sources de données
@@ -95,7 +97,7 @@ sources officielles (parquet, CSV)
 | Résultats par bureau de vote | [Données des élections agrégées](https://www.data.gouv.fr/datasets/6481e741d4cf002ec0efec9d) (data.gouv.fr, d'après le ministère de l'Intérieur) | Résultats, agrégés par commune |
 | Fusions de communes, outre-mer | Code officiel géographique de l'Insee, millésime 2026 | Résolution des codes, collectivités d'outre-mer |
 | Régions et départements de métropole | [france-geojson](https://github.com/gregoiredavid/france-geojson) (d'après IGN Admin Express) | Contours |
-| Communes, départements et régions d'outre-mer | API [Découpage administratif](https://geo.api.gouv.fr) | Contours (les DOM sont fusionnés depuis leurs communes) |
+| Communes, départements et régions d'outre-mer | API [Découpage administratif](https://geo.api.gouv.fr) | Contours (les DOM sont fusionnés depuis leurs communes, puis déplacés dans l'encart) |
 
 ## Paramètres d'URL
 

@@ -18,6 +18,7 @@ import httpx
 
 from oripol_etl.bounds import bbox, merge_bboxes
 from oripol_etl.dissolve import dissolve
+from oripol_etl.inset import boxes, fit_scale, transform_geometry
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT.parent / "web" / "static" / "data"
@@ -27,6 +28,10 @@ API = "https://geo.api.gouv.fr"
 GEOJSON = "https://raw.githubusercontent.com/gregoiredavid/france-geojson/master"
 PARAMS = {"fields": "nom,code", "format": "geojson", "geometry": "contour"}
 DOM_REGIONS = {"971": "01", "972": "02", "973": "03", "974": "04", "976": "06"}  # département -> code région
+SKIPPED_DEPS = {"984", "989"}  # TAAF, Clipperton : pas de résultats électoraux
+# Territoires d'outre-mer, dans l'ordre de l'encart (clé, code collectivité pour les COM)
+OVERSEAS = ["971", "972", "973", "974", "976", "975", "977", "978", "987", "988", "986"]
+INSET = {"cols": 3, "left": -12.4, "top": 41.6, "box_w": 2.2, "box_h": 1.7, "gap": 0.2}  # degrés, au SO de la métropole
 
 
 def get_json(client: httpx.Client, url: str, params: dict | None = None):
@@ -66,7 +71,7 @@ def write_bounds() -> None:
         for f in fc["features"]:
             boxes.setdefault(f["properties"]["id"], []).append(bbox(f["geometry"]))
     merged = {k: list(merge_bboxes(v)) for k, v in boxes.items()}
-    merged["FR"] = [-5.5, 41.2, 9.8, 51.2]  # France métropolitaine
+    merged["FR"] = [INSET["left"] - 0.2, 33.9, 9.8, 51.4]  # métropole + encart outre-mer
     (OUT / "bounds.json").write_text(json.dumps(merged, separators=(",", ":")), encoding="utf-8")
 
 
@@ -82,7 +87,7 @@ def build_tiles() -> None:
     args = ["tippecanoe", "-o", str(OUT / "contours.pmtiles"), "-Z0", "-z10", "--drop-densest-as-needed",
             "--simplify-only-low-zooms", "--force", "-q"]
     args += ["-L", f"regions:{TMP / 'regions.geojson'}", "-L", f"departements:{TMP / 'departements.geojson'}",
-             "-L", f"communes:{tiled}"]
+             "-L", f"communes:{tiled}", "-L", f"inset:{TMP / 'inset.geojson'}"]
     subprocess.run(args, check=True)
 
 
@@ -96,7 +101,7 @@ def main() -> None:
     with httpx.Client(follow_redirects=True) as client:
         regions = get_json(client, f"{GEOJSON}/regions-version-simplifiee.geojson")["features"]
         departements = get_json(client, f"{GEOJSON}/departements-version-simplifiee.geojson")["features"]
-        api_deps = get_json(client, f"{API}/departements")
+        api_deps = [d for d in get_json(client, f"{API}/departements") if d["code"] not in SKIPPED_DEPS]
         dep_codes = [d["code"] for d in api_deps]
         dep_names = {d["code"]: d["nom"] for d in api_deps}
 
@@ -106,35 +111,54 @@ def main() -> None:
 
         with ThreadPoolExecutor(max_workers=6) as pool:
             by_dep = dict(zip(dep_codes, pool.map(commune_dep, dep_codes)))
-            communes = [f for fs in by_dep.values() for f in fs]
             comer = read_comer()
-            comer_features = pool.map(
-                lambda t: get_json(client, f"{API}/communes/{t[0]}", PARAMS), comer
-            )
+            comer_features = pool.map(lambda t: get_json(client, f"{API}/communes/{t[0]}", PARAMS), comer)
         comer_polys = [(f, c, lab) for f, (_, c, lab) in zip(comer_features, comer) if f]
+
+    # territoires d'outre-mer : communes brutes (vraies coordonnées), libellé, code région
+    groups: dict[str, dict] = {}
+    for dep, region in DOM_REGIONS.items():
+        groups[dep] = {"label": dep_names[dep], "region": region, "communes": by_dep[dep]}
+    for f, collectivite, label in comer_polys:
+        g = groups.setdefault(collectivite, {"label": label, "region": collectivite, "communes": []})
+        g["communes"].append(f)
+    # Saint-Barthélemy et Saint-Martin partagent le libellé COG « collectivité » : on garde leurs noms propres
+    for code in ("977", "978"):
+        if code in groups and groups[code]["communes"]:
+            groups[code]["label"] = groups[code]["communes"][0]["properties"]["nom"]
 
     layers = {
         "regions": tagged(regions, "REG"),
         "departements": tagged(departements, "DEP"),
-        "communes": tagged(communes, "COM"),
+        "communes": tagged([f for dep, fs in by_dep.items() if dep not in DOM_REGIONS for f in fs], "COM"),
+        "inset": [],
     }
-    for dep, region in DOM_REGIONS.items():  # DOM : département et région reconstruits depuis leurs communes
-        label = dep_names[dep]
-        layers["departements"].append(dissolve(by_dep[dep], f"DEP-{dep}", label))
-        layers["regions"].append(dissolve(by_dep[dep], f"REG-{region}", label))
-        names[f"DEP-{dep}"] = label
-        names[f"REG-{region}"] = label
-    by_collectivite: dict[str, list[dict]] = {}
-    labels: dict[str, str] = {}
-    for f, collectivite, label in comer_polys:
-        labels[collectivite] = label
-        layers["communes"] += tagged([f], "COM")
-        by_collectivite.setdefault(collectivite, []).append(f)
-        for prefix in ("DEP", "REG"):
-            names[f"{prefix}-{collectivite}"] = label
-    for collectivite, fs in by_collectivite.items():  # collectivités d'outre-mer : un polygone par département/région
-        layers["departements"].append(dissolve(fs, f"DEP-{collectivite}", labels[collectivite]))
-        layers["regions"].append(dissolve(fs, f"REG-{collectivite}", labels[collectivite]))
+    cells = boxes(len(OVERSEAS), **{k: INSET[k] for k in ("cols", "left", "top", "box_w", "box_h", "gap")})
+    for key, (west, south, east, north) in zip(OVERSEAS, cells):
+        g = groups[key]
+        src = merge_bboxes([bbox(f["geometry"]) for f in g["communes"]])
+        src_center = ((src[0] + src[2]) / 2, (src[1] + src[3]) / 2)
+        dst_center = ((west + east) / 2, (south + north) / 2)
+        scale = 0.9 * fit_scale(src, east - west, north - south, src_center[1], dst_center[1])
+        moved = []
+        for f in g["communes"]:
+            m = copy.deepcopy(f)
+            m["geometry"] = transform_geometry(f["geometry"], src_center, dst_center, scale)
+            moved.append(m)
+        layers["communes"] += tagged(moved, "COM")
+        layers["departements"].append(dissolve(moved, f"DEP-{key}", g["label"]))
+        layers["regions"].append(dissolve(moved, f"REG-{g['region']}", g["label"]))
+        names[f"DEP-{key}"] = names[f"REG-{g['region']}"] = g["label"]
+        layers["inset"].append(
+            {
+                "type": "Feature",
+                "properties": {"id": f"FRAME-{key}", "name": g["label"]},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[west, south], [east, south], [east, north], [west, north], [west, south]]],
+                },
+            }
+        )
     for fs in layers.values():
         for f in fs:
             names.setdefault(f["properties"]["id"], f["properties"]["name"])  # les noms posés explicitement priment

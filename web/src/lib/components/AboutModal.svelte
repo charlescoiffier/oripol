@@ -34,6 +34,12 @@
 				Ce classement est discutable : vous pouvez modifier la position de chaque famille et le rattachement
 				de chaque candidat. Le lien de la page conserve vos réglages.
 			</p>
+			<p>
+				<strong>Attention : les tendances dépendent beaucoup du classement.</strong> Par défaut, la France
+				insoumise est rangée à gauche (et non à l'extrême gauche) et Emmanuel Macron au centre. Avec ces choix, la
+				droite et l'extrême droite semblent progresser de 2002 à 2022, alors que la part de la gauche recule et
+				que le centre double. Rattachez ces candidats autrement pour voir l'effet.
+			</p>
 		</section>
 
 		<section>
