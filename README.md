@@ -2,7 +2,11 @@
 
 Représentation des dynamiques de vote des élections françaises : une application web qui montre comment un territoire français (commune, département, région, pays) se déplace politiquement d'une élection à l'autre, à partir des résultats officiels.
 
-**Lancer l'application : `./start.sh`**
+[![Déploiement](https://github.com/charlescoiffier/oripol/actions/workflows/deploy.yml/badge.svg)](https://github.com/charlescoiffier/oripol/actions/workflows/deploy.yml)
+
+**Voir le site : https://charlescoiffier.github.io/oripol/**
+
+En local : `./start.sh`
 
 Aucun compte, aucun serveur applicatif : le site est statique et tout le calcul se fait dans le navigateur.
 
