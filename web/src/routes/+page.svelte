@@ -469,6 +469,10 @@
 		overflow-y: auto;
 		padding: 10px 14px 16px;
 	}
+	/* les éléments de la colonne ne rétrécissent pas : sur un écran bas, la colonne défile au lieu de les écraser */
+	.inner > :global(*) {
+		flex-shrink: 0;
+	}
 	.about {
 		margin-top: auto;
 		padding-top: 18px;
