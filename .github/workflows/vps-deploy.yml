@@ -1,0 +1,94 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # la version d'Ubuntu (2.49) produit des tuiles sans communes : on compile la 2.79.0 utilisée en local
+      - name: Cache tippecanoe
+        id: tippecanoe-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/tippecanoe-bin
+          key: tippecanoe-2.79.0
+
+      - name: Compiler tippecanoe
+        if: steps.tippecanoe-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsqlite3-dev zlib1g-dev
+          git clone --depth 1 --branch 2.79.0 https://github.com/felt/tippecanoe.git /tmp/tippecanoe
+          make -C /tmp/tippecanoe -j"$(nproc)"
+          make -C /tmp/tippecanoe install PREFIX="$HOME/tippecanoe-bin"
+
+      - name: Ajouter tippecanoe au PATH
+        run: echo "$HOME/tippecanoe-bin/bin" >> "$GITHUB_PATH"
+
+      # sources, résultats JSON et tuiles : régénérés à chaque déploiement (non versionnés)
+      - name: Générer les données
+        run: ./build-data.sh
+
+      # à la racine du sous-domaine : pas de BASE_PATH
+      - name: Construire le site
+        working-directory: web
+        run: |
+          npm ci --engine-strict=false
+          npm run build
+
+      # GHCR exige un nom d'image en minuscules
+      - name: Image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+        run: |
+          install -m 600 /dev/null key
+          printf '%s\n' "$SSH_KEY" > key
+          OPTS="-i key -o StrictHostKeyChecking=accept-new"
+          scp $OPTS deploy/docker-compose.yml "deploy@$SSH_HOST:srv/oripol/docker-compose.yml"
+          ssh $OPTS "deploy@$SSH_HOST" \
+            "echo '$GHCR_TOKEN' | docker login ghcr.io -u '$GHCR_USER' --password-stdin >/dev/null && \
+             cd ~/srv/oripol && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f"
